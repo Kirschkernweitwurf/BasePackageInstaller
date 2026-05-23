@@ -5,9 +5,9 @@ using UnityEditor.PackageManager.Requests;
 namespace Base.PackageInstaller.Editor
 {
     /// <summary>
-    /// Installs packages sequentially by adding Git dependencies.
+    /// Updates packages sequentially by re-adding Git dependencies.
     /// </summary>
-    public sealed class PackageInstaller : PackageOperation
+    public sealed class PackageUpdater : PackageOperation
     {
         /// <inheritdoc/>
         protected override Request CreateRequest(string url) => Client.Add(url);
