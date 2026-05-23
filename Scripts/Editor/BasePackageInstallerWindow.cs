@@ -7,47 +7,41 @@ using UnityEngine;
 namespace Base.PackageInstaller.Editor
 {
     /// <summary>
-    /// Editor window for installing base packages and setting up project-side services.
+    /// Editor window for installing base packages.
     /// </summary>
     public class BasePackageInstallerWindow : EditorWindow
     {
-        private static readonly PackageEntry[] Packages =
-        {
-            new("Tools", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/Tools"),
-            new("Attributes", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/Attributes"),
-            new("Systems", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/Systems"),
-            new("UI", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/UI"),
-            new("Utility", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/Utility"),
-            new("ScreenShake", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/ScreenShake"),
-        };
+        private readonly bool[] _selected = Enumerable.Repeat(true, BasePackageRegistry.Packages.Length).ToArray();
 
-        private readonly bool[] _selected = Enumerable.Repeat(true, Packages.Length).ToArray();
-        private readonly PackageInstaller _installer = new();
-
-        private Vector2 _scroll;
         private string _status;
+        private Vector2 _scroll;
+        private PackageInstaller _installer;
 
-        [MenuItem("Tools/Base Package Installer")]
+        [MenuItem("Tools/Base Package Installer/Installer")]
         public static void ShowWindow() => GetWindow<BasePackageInstallerWindow>("Base Package Installer");
 
         private void OnEnable()
         {
+            _installer ??= new PackageInstaller();
+
             _installer.OnPackageStarted += HandlePackageStarted;
-            _installer.OnPackageInstalled += HandlePackageInstalled;
+            _installer.OnPackageCompleted += HandlePackageInstalled;
             _installer.OnPackageFailed += HandlePackageFailed;
-            _installer.OnAllPackagesInstalled += HandleAllPackagesInstalled;
+            _installer.OnAllPackagesCompleted += HandleAllPackagesInstalled;
         }
 
         private void OnDisable()
         {
             _installer.OnPackageStarted -= HandlePackageStarted;
-            _installer.OnPackageInstalled -= HandlePackageInstalled;
+            _installer.OnPackageCompleted -= HandlePackageInstalled;
             _installer.OnPackageFailed -= HandlePackageFailed;
-            _installer.OnAllPackagesInstalled -= HandleAllPackagesInstalled;
+            _installer.OnAllPackagesCompleted -= HandleAllPackagesInstalled;
         }
 
         private void OnGUI()
         {
+            DrawNavigation();
+
             DrawPackagesSection();
 
             EditorGUILayout.Space(12);
@@ -58,7 +52,59 @@ namespace Base.PackageInstaller.Editor
                 return;
 
             EditorGUILayout.Space(4);
-            EditorGUILayout.HelpBox(_status, _installer.IsInstalling ? MessageType.Info : MessageType.None);
+
+            EditorGUILayout.HelpBox(_status, _installer.IsRunning
+                ? MessageType.Info
+                : MessageType.None);
+        }
+
+        private static void DrawNavigation()
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button("Open Updater", GUILayout.Width(140)))
+                BasePackageUpdaterWindow.ShowWindow();
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(4);
+        }
+
+        private void DrawPackagesSection()
+        {
+            EditorGUILayout.Space(8);
+            EditorGUILayout.LabelField("Base Packages", EditorStyles.boldLabel);
+            EditorGUILayout.Space(4);
+
+            _scroll = EditorGUILayout.BeginScrollView(_scroll);
+
+            for (int i = 0; i < BasePackageRegistry.Packages.Length; i++)
+                _selected[i] = EditorGUILayout.ToggleLeft(BasePackageRegistry.Packages[i].Name, _selected[i]);
+
+            EditorGUILayout.EndScrollView();
+
+            EditorGUILayout.Space(8);
+
+            EditorGUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Select All"))
+                SetAllSelected(true);
+
+            if (GUILayout.Button("Deselect All"))
+                SetAllSelected(false);
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(4);
+
+            EditorGUI.BeginDisabledGroup(_installer.IsRunning);
+
+            if (GUILayout.Button("Install Selected", GUILayout.Height(30)))
+                StartInstall();
+
+            EditorGUI.EndDisabledGroup();
         }
 
         private static void DrawProjectSetupSection()
@@ -80,44 +126,6 @@ namespace Base.PackageInstaller.Editor
             EditorGUI.EndDisabledGroup();
         }
 
-        private static void HandlePackageInstalled(string packageName)
-        {
-            Debug.Log($"{nameof(BasePackageInstallerWindow)}: Installed {packageName} successfully.");
-        }
-
-        private void DrawPackagesSection()
-        {
-            EditorGUILayout.Space(8);
-            EditorGUILayout.LabelField("Base Packages", EditorStyles.boldLabel);
-            EditorGUILayout.Space(4);
-
-            _scroll = EditorGUILayout.BeginScrollView(_scroll);
-
-            for (int i = 0; i < Packages.Length; i++)
-                _selected[i] = EditorGUILayout.ToggleLeft(Packages[i].Name, _selected[i]);
-
-            EditorGUILayout.EndScrollView();
-
-            EditorGUILayout.Space(8);
-            EditorGUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Select All"))
-                SetAllSelected(true);
-
-            if (GUILayout.Button("Deselect All"))
-                SetAllSelected(false);
-
-            EditorGUILayout.EndHorizontal();
-            EditorGUILayout.Space(4);
-
-            EditorGUI.BeginDisabledGroup(_installer.IsInstalling);
-
-            if (GUILayout.Button("Install Selected", GUILayout.Height(30)))
-                StartInstall();
-
-            EditorGUI.EndDisabledGroup();
-        }
-
         private void SetAllSelected(bool value)
         {
             for (int i = 0; i < _selected.Length; i++)
@@ -128,13 +136,11 @@ namespace Base.PackageInstaller.Editor
         {
             List<string> urls = new();
 
-            for (int i = 0; i < Packages.Length; i++)
-            {
+            for (int i = 0; i < BasePackageRegistry.Packages.Length; i++)
                 if (_selected[i])
-                    urls.Add(Packages[i].Url);
-            }
+                    urls.Add(BasePackageRegistry.Packages[i].Url);
 
-            _installer.Install(urls);
+            _installer.Run(urls);
         }
 
         private void HandlePackageStarted(string url)
@@ -143,10 +149,17 @@ namespace Base.PackageInstaller.Editor
             Repaint();
         }
 
+        private static void HandlePackageInstalled(string packageName)
+        {
+            Debug.Log($"{nameof(BasePackageInstallerWindow)}: Installed {packageName} successfully.", null);
+        }
+
         private void HandlePackageFailed(string error)
         {
             _status = $"Failed: {error}";
-            Debug.LogError($"{nameof(BasePackageInstallerWindow)}: {_status}");
+
+            Debug.LogError($"{nameof(BasePackageInstallerWindow)}: {_status}", null);
+
             Repaint();
         }
 
