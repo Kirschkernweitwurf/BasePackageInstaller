@@ -1,3 +1,5 @@
+using System.Linq;
+
 #if UNITY_EDITOR
 namespace Base.PackageInstaller.Editor.Data
 {
@@ -17,6 +19,8 @@ namespace Base.PackageInstaller.Editor.Data
             new("Save System", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/SaveSystem"),
             new("Settings System", "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/Settings"),
         };
+
+        public static readonly PackageEntry[] SortedPackages = Packages.OrderBy(p => p.Name).ToArray();
     }
 }
 #endif
