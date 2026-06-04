@@ -49,6 +49,8 @@ namespace Base.PackageInstaller.Editor.Window
         /// <returns>A new package operation instance.</returns>
         protected abstract PackageOperation CreateOperation();
 
+        private PackageEntry[] _packages;
+
         /// <summary>
         /// Opens the companion window (the updater opens the installer and vice versa).
         /// </summary>
@@ -56,6 +58,8 @@ namespace Base.PackageInstaller.Editor.Window
 
         private void OnEnable()
         {
+            _packages = BasePackageRegistry.SortedPackages;
+
             _operation ??= CreateOperation();
 
             _operation.OnPackageStarted += HandlePackageStarted;
@@ -129,8 +133,8 @@ namespace Base.PackageInstaller.Editor.Window
 
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
-            for (int i = 0; i < BasePackageRegistry.Packages.Length; i++)
-                _selected[i] = EditorGUILayout.ToggleLeft(BasePackageRegistry.Packages[i].Name, _selected[i]);
+            for (int i = 0; i < _packages.Length; i++)
+                _selected[i] = EditorGUILayout.ToggleLeft(_packages[i].Name, _selected[i]);
 
             EditorGUILayout.EndScrollView();
 
@@ -166,9 +170,9 @@ namespace Base.PackageInstaller.Editor.Window
         {
             List<string> urls = new();
 
-            for (int i = 0; i < BasePackageRegistry.Packages.Length; i++)
+            for (int i = 0; i < _packages.Length; i++)
                 if (_selected[i])
-                    urls.Add(BasePackageRegistry.Packages[i].Url);
+                    urls.Add(_packages[i].Url);
 
             _status = null;
             _hasFailures = false;
