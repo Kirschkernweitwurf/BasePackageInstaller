@@ -127,21 +127,16 @@ namespace Base.PackageInstaller.Editor.Window
 
         private static void DrawProjectSetupSection()
         {
+            if (ProjectInputServiceSetup.IsSetUp)
+                return;
+
             EditorGUILayout.LabelField("Project Setup", EditorStyles.boldLabel);
             EditorGUILayout.Space(4);
 
-            bool alreadySetUp = ProjectInputServiceSetup.IsSetUp;
-
-            string label = alreadySetUp
-                ? "ProjectInputService — already set up"
-                : "Create ProjectInputService";
-
-            EditorGUI.BeginDisabledGroup(alreadySetUp);
+            const string label = "Create ProjectInputService";
 
             if (GUILayout.Button(label, GUILayout.Height(30)))
                 ProjectInputServiceSetup.Run();
-
-            EditorGUI.EndDisabledGroup();
         }
 
         private void EnsureStyles()
