@@ -25,7 +25,8 @@ namespace Base.PackageInstaller.Editor.Data
             new PackageEntry("Save System", $"{BaseUrl}SaveSystem"),
             new PackageEntry("Settings System", $"{BaseUrl}Settings"),
             new PackageEntry("Localization", $"{BaseUrl}Localization"),
-            new PackageEntry("Memory Profiler", $"{BaseUrl}MemoryProfiler")
+            new PackageEntry("Memory Profiler", $"{BaseUrl}MemoryProfiler"),
+            new PackageEntry("Controller Support", $"{BaseUrl}ControllerSupport")
         };
     }
 }
