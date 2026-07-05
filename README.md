@@ -1,6 +1,6 @@
 # BaseProjectPackageInstaller
 
-A small Unity tool that makes installing my [BaseProjectPackages](https://github.com/JonathanAlber/BaseProjectPackages) quick and painless. No need to copy-paste Git URLs one by one, just click the menu item and you're set.
+A small Unity tool that makes installing my [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages) quick and painless. No need to copy-paste Git URLs one by one, just click the menu item and you're set.
 
 ## Installation
 
@@ -9,7 +9,7 @@ A small Unity tool that makes installing my [BaseProjectPackages](https://github
 3. Click **+** and select **Install package from git URL**
 4. Paste:
    ```
-   https://github.com/JonathanAlber/BasePackageInstaller.git
+   https://github.com/Kirschkernweitwurf/BasePackageInstaller.git
    ```
 5. Hit **Enter**
 6. Enjoy
@@ -64,7 +64,7 @@ The installer can pull in any of the following:
 | `ScreenShake` | Screen shake effects |
 | `Save System` | Saving and loading game data |
 
-All of these live in the [BaseProjectPackages](https://github.com/JonathanAlber/BaseProjectPackages) repo.
+All of these live in the [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages) repo.
 
 ## Why?
 
