@@ -2,7 +2,7 @@
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 
-namespace Base.PackageInstaller.Editor.Operations
+namespace Base.PackageInstaller.Operations
 {
     /// <summary>
     /// Adds packages as Git dependencies. <see cref="Client.Add(string)"/> installs a package

@@ -2,14 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Base.PackageInstaller.Editor.Data;
-using Base.PackageInstaller.Editor.Operations.Persistence;
+using Base.PackageInstaller.Data;
+using Base.PackageInstaller.Operations.Persistence;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
-namespace Base.PackageInstaller.Editor.Operations
+namespace Base.PackageInstaller.Operations
 {
     /// <summary>
     /// Base class for sequential package operations.
@@ -51,6 +51,12 @@ namespace Base.PackageInstaller.Editor.Operations
         /// </summary>
         public bool IsRunning { get; private set; }
 
+        /// <summary>
+        /// The key under which this operation's progress is persisted.
+        /// Each concrete operation type gets its own slot so independent runs never collide.
+        /// </summary>
+        private string PersistenceKey => GetType().Name;
+
         private readonly Queue<string> _queue = new();
         private readonly List<PackageResult> _results = new();
         private readonly Dictionary<string, InstalledPackage> _installed = new();
@@ -59,12 +65,6 @@ namespace Base.PackageInstaller.Editor.Operations
         private string _currentLabel;
         private ListRequest _listRequest;
         private bool _hasSnapshot;
-
-        /// <summary>
-        /// The key under which this operation's progress is persisted.
-        /// Each concrete operation type gets its own slot so independent runs never collide.
-        /// </summary>
-        private string PersistenceKey => GetType().Name;
 
         /// <summary>
         /// Starts processing the given package URLs sequentially.
@@ -134,6 +134,16 @@ namespace Base.PackageInstaller.Editor.Operations
         /// <returns>A request object representing the package operation.</returns>
         protected abstract Request CreateRequest(string url);
 
+        private static bool HasChanged(InstalledPackage previous, PackageInfo info)
+        {
+            if (!string.IsNullOrEmpty(previous.Hash) && info.git != null)
+                return previous.Hash != info.git.hash;
+
+            return previous.Version != info.version;
+        }
+
+        private static string GetLabel(string url) => url.Split('/').Last();
+
         private void ResetState()
         {
             _queue.Clear();
@@ -148,14 +158,17 @@ namespace Base.PackageInstaller.Editor.Operations
 
         private void BeginSnapshot()
         {
-            _listRequest = Client.List(offlineMode: false, includeIndirectDependencies: false);
+            _listRequest = Client.List(false, false);
 
             EditorApplication.update += OnSnapshotProgress;
         }
 
         private void OnSnapshotProgress()
         {
-            if (_listRequest is not { IsCompleted: true })
+            if (_listRequest is not
+                {
+                    IsCompleted: true
+                })
                 return;
 
             EditorApplication.update -= OnSnapshotProgress;
@@ -193,7 +206,10 @@ namespace Base.PackageInstaller.Editor.Operations
 
         private void OnProgress()
         {
-            if (_currentRequest is not { IsCompleted: true })
+            if (_currentRequest is not
+                {
+                    IsCompleted: true
+                })
                 return;
 
             EditorApplication.update -= OnProgress;
@@ -229,7 +245,11 @@ namespace Base.PackageInstaller.Editor.Operations
             if (_currentRequest.Status == StatusCode.Failure)
                 return Failure(_currentRequest.Error?.message ?? "Unknown error");
 
-            if (_currentRequest is not AddRequest { Result: { } info })
+            if (_currentRequest is not AddRequest
+                {
+                    Result:
+                    { } info
+                })
                 return new PackageResult(_currentLabel, _currentLabel, string.Empty,
                     string.Empty, true, true, null);
 
@@ -242,11 +262,8 @@ namespace Base.PackageInstaller.Editor.Operations
                 changed, true, null);
         }
 
-        private PackageResult Failure(string error)
-        {
-            return new PackageResult(_currentLabel, _currentLabel, string.Empty,
-                string.Empty, false, false, error);
-        }
+        private PackageResult Failure(string error) => new(_currentLabel, _currentLabel, string.Empty,
+            string.Empty, false, false, error);
 
         private void Finish()
         {
@@ -289,16 +306,6 @@ namespace Base.PackageInstaller.Editor.Operations
             PackageOperationState state = PackageOperationState.Create(_queue, _results, _installed, _hasSnapshot);
             PackageOperationStore.Save(PersistenceKey, state);
         }
-
-        private static bool HasChanged(InstalledPackage previous, PackageInfo info)
-        {
-            if (!string.IsNullOrEmpty(previous.Hash) && info.git != null)
-                return previous.Hash != info.git.hash;
-
-            return previous.Version != info.version;
-        }
-
-        private static string GetLabel(string url) => url.Split('/').Last();
     }
 }
 #endif

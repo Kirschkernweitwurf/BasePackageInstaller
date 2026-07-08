@@ -1,14 +1,14 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using System.Text;
-using Base.PackageInstaller.Editor.Data;
-using Base.PackageInstaller.Editor.Operations;
-using Base.PackageInstaller.Editor.ProjectInput;
-using Base.PackageInstaller.Editor.Settings;
+using Base.PackageInstaller.Data;
+using Base.PackageInstaller.Operations;
+using Base.PackageInstaller.ProjectInput;
+using Base.PackageInstaller.Settings;
 using UnityEditor;
 using UnityEngine;
 
-namespace Base.PackageInstaller.Editor.Window
+namespace Base.PackageInstaller.Window
 {
     /// <summary>
     /// Editor window for managing base packages. Adds the selected packages as Git
@@ -73,15 +73,6 @@ namespace Base.PackageInstaller.Editor.Window
             RefreshStatuses();
         }
 
-        private void OnDisable()
-        {
-            _operation.OnPackageStarted -= HandlePackageStarted;
-            _operation.OnPackageCompleted -= HandlePackageCompleted;
-            _operation.OnPackageFailed -= HandlePackageFailed;
-            _operation.OnAllPackagesCompleted -= HandleAllPackagesCompleted;
-            _checker.OnCompleted -= HandleStatusesReady;
-        }
-
         private void OnGUI()
         {
             EnsureStyles();
@@ -106,6 +97,15 @@ namespace Base.PackageInstaller.Editor.Window
             EditorGUILayout.Space(4);
 
             EditorGUILayout.HelpBox(_status, GetStatusMessageType());
+        }
+
+        private void OnDisable()
+        {
+            _operation.OnPackageStarted -= HandlePackageStarted;
+            _operation.OnPackageCompleted -= HandlePackageCompleted;
+            _operation.OnPackageFailed -= HandlePackageFailed;
+            _operation.OnAllPackagesCompleted -= HandleAllPackagesCompleted;
+            _checker.OnCompleted -= HandleStatusesReady;
         }
 
         private void OnFocus() => RefreshStatuses();

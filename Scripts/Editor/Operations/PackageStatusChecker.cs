@@ -1,13 +1,13 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using Base.PackageInstaller.Editor.Data;
+using Base.PackageInstaller.Data;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
-namespace Base.PackageInstaller.Editor.Operations
+namespace Base.PackageInstaller.Operations
 {
     /// <summary>
     /// Queries the project's installed packages and maps them to registry entries by Git URL,
@@ -47,28 +47,9 @@ namespace Base.PackageInstaller.Editor.Operations
                 return;
 
             IsRunning = true;
-            _request = Client.List(offlineMode: true, includeIndirectDependencies: false);
+            _request = Client.List(true, false);
 
             EditorApplication.update += Poll;
-        }
-
-        private void Poll()
-        {
-            if (_request is not { IsCompleted: true })
-                return;
-
-            EditorApplication.update -= Poll;
-
-            Dictionary<string, PackageStatus> statuses = new();
-
-            if (_request.Status == StatusCode.Success && _request.Result != null)
-                foreach (PackageInfo info in _request.Result)
-                    AddGitPackage(statuses, info);
-
-            _request = null;
-            IsRunning = false;
-
-            OnCompleted?.Invoke(statuses);
         }
 
         private static void AddGitPackage(IDictionary<string, PackageStatus> statuses, PackageInfo info)
@@ -88,6 +69,28 @@ namespace Base.PackageInstaller.Editor.Operations
                 return;
 
             statuses[url] = new PackageStatus(true, info.version);
+        }
+
+        private void Poll()
+        {
+            if (_request is not
+                {
+                    IsCompleted: true
+                })
+                return;
+
+            EditorApplication.update -= Poll;
+
+            Dictionary<string, PackageStatus> statuses = new();
+
+            if (_request.Status == StatusCode.Success && _request.Result != null)
+                foreach (PackageInfo info in _request.Result)
+                    AddGitPackage(statuses, info);
+
+            _request = null;
+            IsRunning = false;
+
+            OnCompleted?.Invoke(statuses);
         }
     }
 }

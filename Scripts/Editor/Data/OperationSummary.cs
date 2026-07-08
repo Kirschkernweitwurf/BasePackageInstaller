@@ -1,7 +1,7 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
 
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// Summary of a completed run over multiple packages.

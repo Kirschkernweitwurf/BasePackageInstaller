@@ -4,14 +4,17 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Base.PackageInstaller.Editor.ProjectInput
+namespace Base.PackageInstaller.ProjectInput
 {
     /// <summary>
     /// Finds, creates and configures the project's <see cref="InputActionAsset"/>.
     /// </summary>
     internal static class InputActionAssetSetup
     {
-        private static readonly string[] SearchFolders = { "Assets" };
+        private static readonly string[] SearchFolders =
+        {
+            "Assets"
+        };
 
         public static bool TryEnsureAssetAtPath(string targetPath, string codeNamespace)
         {
@@ -62,7 +65,9 @@ namespace Base.PackageInstaller.Editor.ProjectInput
             if (generateProp == null || !generateProp.boolValue)
                 return;
 
-            string wrapperPath = pathProp != null ? pathProp.stringValue : string.Empty;
+            string wrapperPath = pathProp != null
+                ? pathProp.stringValue
+                : string.Empty;
 
             if (string.IsNullOrEmpty(wrapperPath))
                 wrapperPath = Path.ChangeExtension(assetPath, ".cs");

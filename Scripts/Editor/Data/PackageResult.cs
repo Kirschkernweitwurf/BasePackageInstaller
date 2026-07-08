@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// Outcome of a single package operation.

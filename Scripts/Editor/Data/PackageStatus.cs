@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// The current install status of a registry package in the project.

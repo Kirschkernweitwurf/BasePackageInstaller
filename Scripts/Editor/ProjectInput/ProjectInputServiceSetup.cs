@@ -1,10 +1,9 @@
 #if UNITY_EDITOR
 using System.IO;
-using Base.PackageInstaller.ProjectInput;
 using UnityEditor;
 using UnityEngine;
 
-namespace Base.PackageInstaller.Editor.ProjectInput
+namespace Base.PackageInstaller.ProjectInput
 {
     /// <summary>
     /// Sets up the project's input service: configures the input action asset
@@ -12,18 +11,17 @@ namespace Base.PackageInstaller.Editor.ProjectInput
     /// </summary>
     public static class ProjectInputServiceSetup
     {
-        private const string AssetsPrefix = "Assets/";
-
         private const string AssetFolder = "Assets/Input";
         private const string AssetName = "PlayerInputActions";
+        private const string AssetsPrefix = "Assets/";
+        private const string ServiceFileName = "ProjectInputService.cs";
 
         private const string ServiceFolder = "Assets/Generated/Input";
-        private const string ServiceFileName = "ProjectInputService.cs";
+
+        public static bool IsSetUp => File.Exists(AssetPath) && File.Exists(ServicePath);
 
         private static readonly string ServicePath = $"{ServiceFolder}/{ServiceFileName}";
         private static readonly string AssetPath = $"{AssetFolder}/{AssetName}.inputactions";
-
-        public static bool IsSetUp => File.Exists(AssetPath) && File.Exists(ServicePath);
 
         public static void Run()
         {

@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// Editor-only registry of base packages, persisted per project in

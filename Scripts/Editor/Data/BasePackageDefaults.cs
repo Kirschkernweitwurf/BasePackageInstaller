@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// The default base packages seeded into a fresh <see cref="BasePackageRegistry"/>.
@@ -18,7 +18,7 @@ namespace Base.PackageInstaller.Editor.Data
         {
             new PackageEntry("Tools", $"{BaseUrl}Tools"),
             new PackageEntry("Attributes", $"{BaseUrl}Attributes"),
-            new PackageEntry("Systems", $"{BaseUrl}Systems"),
+            new PackageEntry("Core", $"{BaseUrl}Core"),
             new PackageEntry("UI", $"{BaseUrl}UI"),
             new PackageEntry("Utility", $"{BaseUrl}Utility"),
             new PackageEntry("ScreenShake", $"{BaseUrl}ScreenShake"),
