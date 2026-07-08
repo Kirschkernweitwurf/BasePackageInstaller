@@ -1,4 +1,4 @@
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// Represents a package installed in the project, with its version and hash.

@@ -1,9 +1,9 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
-using Base.PackageInstaller.Editor.Data;
+using Base.PackageInstaller.Data;
 using UnityEditor;
 
-namespace Base.PackageInstaller.Editor.Settings
+namespace Base.PackageInstaller.Settings
 {
     /// <summary>
     /// Exposes the <see cref="BasePackageRegistry"/> under Project Settings → "Base Packages"
@@ -11,8 +11,8 @@ namespace Base.PackageInstaller.Editor.Settings
     /// </summary>
     internal static class BasePackageSettingsProvider
     {
-        private const string SettingsPath = "Project/Custom Tools/Git Packages";
         private const string PackagesProperty = "packages";
+        private const string SettingsPath = "Project/Custom Tools/Git Packages";
 
         /// <summary>
         /// The settings path used to open this page programmatically.
@@ -28,7 +28,14 @@ namespace Base.PackageInstaller.Editor.Settings
             return new SettingsProvider(SettingsPath, SettingsScope.Project)
             {
                 label = "Git Packages",
-                keywords = new HashSet<string> { "package", "git", "installer", "updater", "base" },
+                keywords = new HashSet<string>
+                {
+                    "package",
+                    "git",
+                    "installer",
+                    "updater",
+                    "base"
+                },
                 guiHandler = _ => DrawGui(serializedObject, packagesProperty)
             };
         }
@@ -37,9 +44,8 @@ namespace Base.PackageInstaller.Editor.Settings
         {
             serializedObject.Update();
 
-            EditorGUILayout.HelpBox(
-                "Packages available in the Base Package Manager window. " +
-                "Name is the label shown; URL is the Git dependency to add.",
+            EditorGUILayout.HelpBox("Packages available in the Base Package Manager window. "
+                + "Name is the label shown; URL is the Git dependency to add.",
                 MessageType.Info);
 
             EditorGUILayout.Space(4);

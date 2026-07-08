@@ -1,7 +1,7 @@
 using System;
-using Base.PackageInstaller.Editor.Data;
+using Base.PackageInstaller.Data;
 
-namespace Base.PackageInstaller.Editor.Operations.Persistence
+namespace Base.PackageInstaller.Operations.Persistence
 {
     /// <summary>
     /// Serializable mirror of an <see cref="InstalledPackage"/> together with its package name.

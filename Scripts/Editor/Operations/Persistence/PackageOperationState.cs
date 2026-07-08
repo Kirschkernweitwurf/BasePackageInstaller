@@ -1,10 +1,10 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using Base.PackageInstaller.Editor.Data;
+using Base.PackageInstaller.Data;
 using UnityEngine;
 
-namespace Base.PackageInstaller.Editor.Operations.Persistence
+namespace Base.PackageInstaller.Operations.Persistence
 {
     /// <summary>
     /// Serializable snapshot of a running package operation.
@@ -38,16 +38,13 @@ namespace Base.PackageInstaller.Editor.Operations.Persistence
         /// <param name="hasSnapshot">Whether the snapshot has already been captured.</param>
         /// <returns>A state object ready to be serialized.</returns>
         public static PackageOperationState Create(IEnumerable<string> remaining, IReadOnlyList<PackageResult> results,
-            IReadOnlyDictionary<string, InstalledPackage> snapshot,bool hasSnapshot)
+            IReadOnlyDictionary<string, InstalledPackage> snapshot, bool hasSnapshot) => new()
         {
-            return new PackageOperationState
-            {
-                remainingUrls = new List<string>(remaining).ToArray(),
-                results = ToSerializable(results),
-                snapshot = ToSerializable(snapshot),
-                hasSnapshot = hasSnapshot
-            };
-        }
+            remainingUrls = new List<string>(remaining).ToArray(),
+            results = ToSerializable(results),
+            snapshot = ToSerializable(snapshot),
+            hasSnapshot = hasSnapshot
+        };
 
         /// <summary>
         /// Rebuilds the gathered results in their original order.
@@ -61,8 +58,10 @@ namespace Base.PackageInstaller.Editor.Operations.Persistence
                 return restored;
 
             foreach (SerializableResult result in results)
+            {
                 restored.Add(new PackageResult(result.label, result.name, result.version,
                     result.previousVersion, result.changed, result.success, result.error));
+            }
 
             return restored;
         }

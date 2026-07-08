@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace Base.PackageInstaller.Editor.Operations.Persistence
+namespace Base.PackageInstaller.Operations.Persistence
 {
     /// <summary>
     /// Persists <see cref="PackageOperationState"/> in <see cref="SessionState"/>.
@@ -22,9 +22,7 @@ namespace Base.PackageInstaller.Editor.Operations.Persistence
         /// <param name="key">A key that uniquely identifies the operation (e.g. its type name).</param>
         /// <param name="state">The state to persist.</param>
         public static void Save(string key, PackageOperationState state)
-        {
-            SessionState.SetString(Resolve(key), JsonUtility.ToJson(state));
-        }
+            => SessionState.SetString(Resolve(key), JsonUtility.ToJson(state));
 
         /// <summary>
         /// Tries to load a previously saved state for the given key.
@@ -50,10 +48,7 @@ namespace Base.PackageInstaller.Editor.Operations.Persistence
         /// Removes any saved state for the given key.
         /// </summary>
         /// <param name="key">The key to clear.</param>
-        public static void Clear(string key)
-        {
-            SessionState.EraseString(Resolve(key));
-        }
+        public static void Clear(string key) => SessionState.EraseString(Resolve(key));
 
         private static string Resolve(string key) => KeyPrefix + key;
     }

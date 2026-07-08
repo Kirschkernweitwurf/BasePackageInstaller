@@ -2,7 +2,7 @@
 using System;
 using UnityEngine;
 
-namespace Base.PackageInstaller.Editor.Data
+namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// Represents a package entry with a friendly name and a Git URL.
