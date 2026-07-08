@@ -6,8 +6,8 @@ namespace Base.PackageInstaller.ProjectInput
     /// </summary>
     internal static class ProjectInputServiceCodeTemplate
     {
-        private const string NamespaceToken = "__NAMESPACE__";
         private const string AssetNamespaceToken = "__ASSET_NAMESPACE__";
+        private const string NamespaceToken = "__NAMESPACE__";
 
         private const string Template = @"using Base.SystemsCorePackage.Services;
 using Input;
@@ -17,8 +17,8 @@ using UnityEngine.InputSystem;
 namespace __NAMESPACE__
 {
     /// <summary>
-    /// Project-specific input service. Owns the generated <see cref=""PlayerInputActions""/>
-    /// instance and exposes it through <see cref=""Actions""/>.
+    /// Project-specific input service. Owns the generated <see cref=""""PlayerInputActions""""/>
+    /// instance and exposes it through <see cref=""""Actions""""/>.
     /// </summary>
     public class ProjectInputService : GameServiceBehaviour
     {
@@ -43,14 +43,14 @@ namespace __NAMESPACE__
 
         /// <summary>
         /// Resolves a map against the package's runtime actions clone, so callers enable the
-        /// exact instance they subscribe to via <see cref=""BaseInputActions""/>.
+        /// exact instance they subscribe to via <see cref=""""BaseInputActions""""/>.
         /// </summary>
         // ReSharper disable once MemberCanBePrivate.Global
         public InputActionMap ResolveBaseMap(InputActionMapReference reference) => Actions.asset.FindActionMap(reference.MapId);
 
         /// <summary>
         /// Tries to resolve a map against the package's runtime actions clone, so callers enable the
-        /// exact instance they subscribe to via <see cref=""BaseInputActions""/>.
+        /// exact instance they subscribe to via <see cref=""""BaseInputActions""""/>.
         /// </summary>
         /// <returns><c>>true</c> if the reference was valid and the map was resolved; otherwise, <c>false</c>.</returns>
         public bool TryResolveBaseMap(InputActionMapReference reference, out InputActionMap map)
@@ -67,36 +67,9 @@ namespace __NAMESPACE__
         /// <param name="serviceNamespace">The namespace for the generated service class.</param>
         /// <param name="assetNamespace">The namespace for the generated input actions class.</param>
         /// <returns>The rendered code.</returns>
-        public static string Render(string serviceNamespace, string assetNamespace)
-        {
-            return Template
-                .Replace(NamespaceToken, serviceNamespace)
-                .Replace(AssetNamespaceToken, assetNamespace);
-        }    }
-}
-#endifo callers enable the
-      /// exact instance they subscribe to via <see cref="BaseInputActions"/>.
-      /// </summary>
-      /// <returns><c>>true</c> if the reference was valid and the map was resolved; otherwise, <c>false</c>.</returns>
-      public bool TryResolveBaseMap(InputActionMapReference reference, out InputActionMap map)
-      {
-          map = ResolveBaseMap(reference);
-          return map != null;
-      }
-  }
-}";
-
-        /// <summary>
-        /// Renders the template, replacing tokens with the provided namespaces.
-        /// </summary>
-        /// <param name="serviceNamespace">The namespace for the generated service class.</param>
-        /// <param name="assetNamespace">The namespace for the generated input actions class.</param>
-        /// <returns>The rendered code.</returns>
-        public static string Render(string serviceNamespace, string assetNamespace)
-        {
-            return Template
-                .Replace(NamespaceToken, serviceNamespace)
-                .Replace(AssetNamespaceToken, assetNamespace);
-        }    }
+        public static string Render(string serviceNamespace, string assetNamespace) => Template
+            .Replace(NamespaceToken, serviceNamespace)
+            .Replace(AssetNamespaceToken, assetNamespace);
+    }
 }
 #endif
