@@ -1,5 +1,5 @@
 #if UNITY_EDITOR
-namespace Base.PackageInstaller.Editor.ProjectInput
+namespace Base.PackageInstaller.ProjectInput
 {
     /// <summary>
     /// Template for the generated <c>ProjectInputService.cs</c> file.
@@ -59,6 +59,31 @@ namespace __NAMESPACE__
             return map != null;
         }
     }
+}";
+
+        /// <summary>
+        /// Renders the template, replacing tokens with the provided namespaces.
+        /// </summary>
+        /// <param name="serviceNamespace">The namespace for the generated service class.</param>
+        /// <param name="assetNamespace">The namespace for the generated input actions class.</param>
+        /// <returns>The rendered code.</returns>
+        public static string Render(string serviceNamespace, string assetNamespace)
+        {
+            return Template
+                .Replace(NamespaceToken, serviceNamespace)
+                .Replace(AssetNamespaceToken, assetNamespace);
+        }    }
+}
+#endifo callers enable the
+      /// exact instance they subscribe to via <see cref="BaseInputActions"/>.
+      /// </summary>
+      /// <returns><c>>true</c> if the reference was valid and the map was resolved; otherwise, <c>false</c>.</returns>
+      public bool TryResolveBaseMap(InputActionMapReference reference, out InputActionMap map)
+      {
+          map = ResolveBaseMap(reference);
+          return map != null;
+      }
+  }
 }";
 
         /// <summary>
