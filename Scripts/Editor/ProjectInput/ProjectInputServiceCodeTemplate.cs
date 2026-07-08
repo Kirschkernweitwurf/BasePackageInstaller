@@ -9,7 +9,7 @@ namespace Base.PackageInstaller.ProjectInput
         private const string AssetNamespaceToken = "__ASSET_NAMESPACE__";
         private const string NamespaceToken = "__NAMESPACE__";
 
-        private const string Template = @"using Base.SystemsCorePackage.Services;
+        private const string Template = @"using Base.CorePackage.Services;
 using Input;
 using Base.AttributePackage;
 using UnityEngine.InputSystem;
