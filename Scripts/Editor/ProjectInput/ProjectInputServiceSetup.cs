@@ -35,15 +35,15 @@ namespace Base.PackageInstaller.ProjectInput
                 return;
 
             if (!File.Exists(ServicePath))
-                WriteServiceFile(serviceNamespace, assetNamespace);
+                WriteServiceFile(serviceNamespace);
 
             AssetDatabase.Refresh();
             Debug.Log("ProjectInputService setup complete.");
         }
 
-        private static void WriteServiceFile(string serviceNamespace, string assetNamespace)
+        private static void WriteServiceFile(string serviceNamespace)
         {
-            string code = ProjectInputServiceCodeTemplate.Render(serviceNamespace, assetNamespace);
+            string code = ProjectInputServiceCodeTemplate.Render(serviceNamespace);
             File.WriteAllText(ServicePath, code);
             AssetDatabase.ImportAsset(ServicePath);
         }
