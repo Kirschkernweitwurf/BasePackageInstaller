@@ -1,6 +1,6 @@
 # BaseProjectPackageInstaller
 
-A small Unity tool that makes installing my [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages) quick and painless. No need to copy-paste Git URLs one by one, just click the menu item and you're set.
+A small Unity tool that makes installing and updating my [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages) and any other Git package quick and painless. No need to copy-paste Git URLs one by one, just click the menu item and you're set.
 
 ## Installation
 
@@ -16,53 +16,56 @@ A small Unity tool that makes installing my [BaseProjectPackages](https://github
 
 ## What it does
 
-- Adds two **menu items** under `Tools/Base Package Installer`:
-   - **Installer**: Adds any of my base packages with one click
-   - **Updater**: Re-imports installed packages to pull the latest remote versions
+- Adds a single **Git Package Manager** window under `Tools > Git Package Manager` that handles both installing and updating
+- Shows a table with each package's current install status and version
 - Lets you tick exactly which packages to install or update
-- Auto-generates a preferred `ProjectInputService` and `PlayerInputActions` action asset
-- Generates the matching auto-generated C# class so the input system is ready to use
+- Keeps the package list in a per-project registry you can edit under **Project Settings → Custom Tools → Git Packages**
+- Survives the domain reloads that package installs trigger, so a run always finishes
+- Offers a one-click project setup that generates a preferred `ProjectInputService`, a `PlayerInputActions` action asset, and the matching auto-generated C# class
 
-## Installing packages
+## Using the window
 
-1. Open `Tools > Base Package Installer > Installer`
+1. Open `Tools > Git Package Manager`
 2. Tick the packages you want (or use **Select All**)
-3. Click **Install Selected**
+3. Click the action button
 
-## Updating packages
+The button label adapts to your selection: **Install Selected** when nothing selected is installed yet, **Update Selected** when everything selected is already installed, and **Install / Update Selected** for a mix. Installing and updating are the same operation under the hood: each package is re-resolved as a Git dependency, so missing packages get installed and present ones get pulled to the latest remote version.
 
-1. Open `Tools > Base Package Installer > Updater` (or click **Open Updater** in the installer)
-2. Tick the packages you want to refresh
-3. Click **Update Selected**
+**Refresh** re-checks install statuses and pulls in any new or changed default packages. **Edit List** jumps to the registry in Project Settings.
 
-The updater re-resolves each Git package and tells you what actually happened.
+## The package registry
+
+The list of available packages is stored per project in `ProjectSettings/BasePackageRegistry.asset`, so it can be version controlled and edited per project. It is seeded with the default base packages on first use; after that you can add, remove or rename entries under **Project Settings → Custom Tools → Git Packages**. New or changed defaults are merged in on **Refresh** without discarding your project-specific entries.
 
 ## Logging and status
 
-Both windows now report clearly what is going on:
+The window reports clearly what is going on:
 
 - A live status line shows which package is being processed.
 - Each package logs its result to the Console with the resolved name and version, for example:
-   - `Installed Tools 1.2.0.`
-   - `Updated UI 1.1.0 → 1.2.0.`
-   - `Systems already up to date (1.0.4).`
-- If a package runs into a problem, the run **no longer stops**. Remaining packages are still processed, the failure is logged as a warning and the final status box shows a short summary like `Done. 5 ok, 1 failed.` followed by a per-package breakdown.
-
-This fixes the old behavior where a single minor issue could silently stall the updater without telling you.
+  - `Installed Tools 1.2.0.`
+  - `Updated UI 1.1.0 → 1.2.0.`
+  - `Core is already up to date (1.0.4).`
+- If a package runs into a problem, the run **does not stop**. Remaining packages are still processed, the failure is logged as a warning and the final status box shows a short summary like `Done. 5 ok, 1 failed.` followed by a per-package breakdown.
+- A package install can trigger a script recompile and domain reload mid-run. Progress is persisted and the run resumes automatically where it left off.
 
 ## Included packages
 
-The installer can pull in any of the following:
+The default registry contains the following:
 
 | Package | Description |
 |---|---|
-| `Tools` | General-purpose tools |
+| `Tools` | General-purpose editor tools |
 | `Attributes` | Custom attributes for the inspector and more |
-| `Systems` | Core systems (ServiceLocator, EventBus, etc.) |
+| `Core` | Core systems (ServiceLocator, GameActions, Tweening, etc.) |
 | `UI` | UI helpers and menu management |
 | `Utility` | Common utilities |
 | `ScreenShake` | Screen shake effects |
 | `Save System` | Saving and loading game data |
+| `Settings System` | Game settings management |
+| `Localization` | Localization support |
+| `Memory Profiler` | Memory profiling tools |
+| `Controller Support` | Gamepad navigation and input glyphs |
 
 All of these live in the [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages) repo.
 

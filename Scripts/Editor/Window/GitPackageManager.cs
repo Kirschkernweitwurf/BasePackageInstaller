@@ -25,22 +25,27 @@ namespace Base.PackageInstaller.Window
         private const string InstallOrUpdateLabel = "Install / Update Selected";
         private const string MissingVersion = "—";
         private const string ProgressVerb = "Processing";
-        private const float StatusWidth = 100f;
-
-        private const float ToggleWidth = 18f;
         private const string UnchangedPhrase = "is already up to date";
         private const string UpdateLabel = "Update Selected";
-        private const float VersionWidth = 90f;
         private const string WindowTitle = "Git Package Manager";
 
         private static readonly Color InstalledColor = new(0.40f, 0.78f, 0.40f);
         private static readonly Color NotInstalledColor = new(0.70f, 0.70f, 0.70f);
+
+        // Cached so OnGUI does not allocate a new GUILayoutOption per element per repaint.
+        private static readonly GUILayoutOption ToggleWidth = GUILayout.Width(18f);
+        private static readonly GUILayoutOption StatusWidth = GUILayout.Width(100f);
+        private static readonly GUILayoutOption VersionWidth = GUILayout.Width(90f);
+        private static readonly GUILayoutOption RefreshWidth = GUILayout.Width(70f);
+        private static readonly GUILayoutOption EditListWidth = GUILayout.Width(80f);
+        private static readonly GUILayoutOption ActionHeight = GUILayout.Height(30f);
 
         private string _status;
         private bool _hasFailures;
         private Vector2 _scroll;
 
         private PackageEntry[] _packages;
+        private string[] _normalizedUrls;
         private bool[] _selected;
 
         private IReadOnlyDictionary<string, PackageStatus> _statuses = new Dictionary<string, PackageStatus>();
@@ -118,10 +123,10 @@ namespace Base.PackageInstaller.Window
         {
             EditorGUILayout.BeginHorizontal();
 
-            EditorGUILayout.LabelField(string.Empty, GUILayout.Width(ToggleWidth));
+            EditorGUILayout.LabelField(string.Empty, ToggleWidth);
             EditorGUILayout.LabelField("Package", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Status", EditorStyles.boldLabel, GUILayout.Width(StatusWidth));
-            EditorGUILayout.LabelField("Version", EditorStyles.boldLabel, GUILayout.Width(VersionWidth));
+            EditorGUILayout.LabelField("Status", EditorStyles.boldLabel, StatusWidth);
+            EditorGUILayout.LabelField("Version", EditorStyles.boldLabel, VersionWidth);
 
             EditorGUILayout.EndHorizontal();
         }
@@ -136,7 +141,7 @@ namespace Base.PackageInstaller.Window
 
             const string Label = "Create ProjectInputService";
 
-            if (GUILayout.Button(Label, GUILayout.Height(30)))
+            if (GUILayout.Button(Label, ActionHeight))
                 ProjectInputServiceSetup.Run();
         }
 
@@ -164,11 +169,15 @@ namespace Base.PackageInstaller.Window
 
         private void RefreshPackages()
         {
-            _packages = new List<PackageEntry>(BasePackageRegistry.instance.SortedPackages).ToArray();
+            _packages = BasePackageRegistry.instance.SortedPackages;
+            _normalizedUrls = new string[_packages.Length];
             _selected = new bool[_packages.Length];
 
-            for (int i = 0; i < _selected.Length; i++)
+            for (int i = 0; i < _packages.Length; i++)
+            {
+                _normalizedUrls[i] = PackageStatusChecker.Normalize(_packages[i].Url);
                 _selected[i] = true;
+            }
         }
 
         private void RefreshStatuses()
@@ -200,10 +209,10 @@ namespace Base.PackageInstaller.Window
 
             EditorGUILayout.LabelField("Git Packages", EditorStyles.boldLabel);
 
-            if (GUILayout.Button("Refresh", GUILayout.Width(70)))
+            if (GUILayout.Button("Refresh", RefreshWidth))
                 RefreshAll();
 
-            if (GUILayout.Button("Edit List", GUILayout.Width(80)))
+            if (GUILayout.Button("Edit List", EditListWidth))
                 SettingsService.OpenProjectSettings(BasePackageSettingsProvider.Path);
 
             EditorGUILayout.EndHorizontal();
@@ -235,7 +244,7 @@ namespace Base.PackageInstaller.Window
 
             EditorGUI.BeginDisabledGroup(_operation.IsRunning);
 
-            if (GUILayout.Button(GetActionLabel(), GUILayout.Height(30)))
+            if (GUILayout.Button(GetActionLabel(), ActionHeight))
                 StartOperation();
 
             EditorGUI.EndDisabledGroup();
@@ -243,27 +252,26 @@ namespace Base.PackageInstaller.Window
 
         private void DrawPackageRow(int index)
         {
-            PackageStatus status = GetStatus(_packages[index]);
+            PackageStatus status = GetStatus(index);
 
             EditorGUILayout.BeginHorizontal();
 
-            _selected[index] = EditorGUILayout.Toggle(_selected[index], GUILayout.Width(ToggleWidth));
+            _selected[index] = EditorGUILayout.Toggle(_selected[index], ToggleWidth);
 
             EditorGUILayout.LabelField(_packages[index].Name);
 
-            EditorGUILayout.LabelField(GetStatusText(status), GetStatusStyle(status), GUILayout.Width(StatusWidth));
+            EditorGUILayout.LabelField(GetStatusText(status), GetStatusStyle(status), StatusWidth);
 
             string version = status.IsInstalled
                 ? status.Version
                 : MissingVersion;
 
-            EditorGUILayout.LabelField(version, GUILayout.Width(VersionWidth));
+            EditorGUILayout.LabelField(version, VersionWidth);
 
             EditorGUILayout.EndHorizontal();
         }
 
-        private PackageStatus GetStatus(PackageEntry entry)
-            => _statuses.GetValueOrDefault(PackageStatusChecker.Normalize(entry.Url));
+        private PackageStatus GetStatus(int index) => _statuses.GetValueOrDefault(_normalizedUrls[index]);
 
         private string GetStatusText(PackageStatus status)
         {
@@ -298,7 +306,7 @@ namespace Base.PackageInstaller.Window
                 if (!_selected[i])
                     continue;
 
-                if (GetStatus(_packages[i]).IsInstalled)
+                if (GetStatus(i).IsInstalled)
                     installed++;
                 else
                     notInstalled++;
@@ -360,13 +368,13 @@ namespace Base.PackageInstaller.Window
         }
 
         private void HandlePackageCompleted(PackageResult result)
-            => Debug.Log($"{WindowTitle}: {DescribeResult(result)}", null);
+            => Debug.Log($"{WindowTitle}: {DescribeResult(result)}");
 
         private void HandlePackageFailed(PackageResult result)
         {
             _hasFailures = true;
 
-            Debug.LogWarning($"{WindowTitle}: {DescribeResult(result)}", null);
+            Debug.LogWarning($"{WindowTitle}: {DescribeResult(result)}");
         }
 
         private void HandleAllPackagesCompleted(OperationSummary summary)
@@ -375,16 +383,16 @@ namespace Base.PackageInstaller.Window
             _status = BuildSummary(summary);
 
             if (summary.HasFailures)
-                Debug.LogWarning($"{WindowTitle}: {_status}", null);
+                Debug.LogWarning($"{WindowTitle}: {_status}");
             else
-                Debug.Log($"{WindowTitle}: {_status}", null);
+                Debug.Log($"{WindowTitle}: {_status}");
 
             RefreshStatuses();
 
             Repaint();
         }
 
-        private string DescribeResult(PackageResult result)
+        private static string DescribeResult(PackageResult result)
         {
             if (!result.Success)
                 return $"{result.Label} failed: {result.Error}";
@@ -405,7 +413,7 @@ namespace Base.PackageInstaller.Window
             return $"Updated {resultName} {result.PreviousVersion} → {result.Version}.";
         }
 
-        private string BuildSummary(OperationSummary summary)
+        private static string BuildSummary(OperationSummary summary)
         {
             StringBuilder builder = new();
 
