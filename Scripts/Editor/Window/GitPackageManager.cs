@@ -18,6 +18,12 @@ namespace Base.PackageInstaller.Window
     /// </summary>
     public sealed class GitPackageManager : EditorWindow
     {
+#if BASE_PACKAGES_DEV
+        private const bool IsBasePackageDev = true;
+#else
+        private const bool IsBasePackageDev = false;
+#endif
+
         private const string Description = "Installs the selected git packages or updates them to the latest remote "
             + "version if they are already installed.";
 
@@ -139,9 +145,9 @@ namespace Base.PackageInstaller.Window
             EditorGUILayout.LabelField("Project Setup", EditorStyles.boldLabel);
             EditorGUILayout.Space(4);
 
-            const string Label = "Create ProjectInputService";
+            const string label = "Create ProjectInputService";
 
-            if (GUILayout.Button(Label, ActionHeight))
+            if (GUILayout.Button(label, ActionHeight))
                 ProjectInputServiceSetup.Run();
         }
 
@@ -289,7 +295,7 @@ namespace Base.PackageInstaller.Window
 
             EditorGUILayout.Space(4);
 
-            EditorGUI.BeginDisabledGroup(_operation.IsRunning);
+            EditorGUI.BeginDisabledGroup(_operation.IsRunning || IsBasePackageDev);
 
             if (GUILayout.Button(GetActionLabel(), ActionHeight))
                 StartOperation();
@@ -414,7 +420,7 @@ namespace Base.PackageInstaller.Window
             Repaint();
         }
 
-        private void HandlePackageCompleted(PackageResult result)
+        private static void HandlePackageCompleted(PackageResult result)
             => Debug.Log($"{WindowTitle}: {DescribeResult(result)}");
 
         private void HandlePackageFailed(PackageResult result)

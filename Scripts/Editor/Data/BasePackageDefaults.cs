@@ -21,7 +21,6 @@ namespace Base.PackageInstaller.Data
             new PackageEntry("Core", $"{BaseUrl}Core"),
             new PackageEntry("UI", $"{BaseUrl}UI"),
             new PackageEntry("Utility", $"{BaseUrl}Utility"),
-            new PackageEntry("ScreenShake", $"{BaseUrl}ScreenShake"),
             new PackageEntry("Save System", $"{BaseUrl}SaveSystem"),
             new PackageEntry("Settings System", $"{BaseUrl}Settings"),
             new PackageEntry("Localization", $"{BaseUrl}Localization"),
