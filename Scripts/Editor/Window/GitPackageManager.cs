@@ -1,10 +1,12 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
-using System.Text;
 using Base.PackageInstaller.Data;
 using Base.PackageInstaller.Operations;
 using Base.PackageInstaller.ProjectInput;
 using Base.PackageInstaller.Settings;
+using Base.PackageInstaller.Window.Format;
+using Base.PackageInstaller.Window.Theme;
+using Base.PackageInstaller.Window.View;
 using UnityEditor;
 using UnityEngine;
 
@@ -24,27 +26,37 @@ namespace Base.PackageInstaller.Window
         private const bool IsBasePackageDev = false;
 #endif
 
+        private const string WindowTitle = "Git Package Manager";
         private const string Description = "Installs the selected git packages or updates them to the latest remote "
             + "version if they are already installed.";
 
+        private const string PackagesHeader = "Git Packages";
+        private const string ProjectSetupHeader = "Project Setup";
+        private const string RefreshLabel = "Refresh";
+        private const string EditListLabel = "Edit List";
+        private const string SelectAllLabel = "Select All";
+        private const string DeselectAllLabel = "Deselect All";
+        private const string CreateInputServiceLabel = "Create ProjectInputService";
+        private const string ResultHeader = "Result";
+        private const string ClearLabel = "Clear";
+
         private const string InstallLabel = "Install Selected";
-        private const string InstallOrUpdateLabel = "Install / Update Selected";
-        private const string MissingVersion = "—";
-        private const string ProgressVerb = "Processing";
-        private const string UnchangedPhrase = "is already up to date";
         private const string UpdateLabel = "Update Selected";
-        private const string WindowTitle = "Git Package Manager";
-        private static readonly GUILayoutOption ActionHeight = GUILayout.Height(30f);
-        private static readonly GUILayoutOption EditListWidth = GUILayout.Width(80f);
+        private const string InstallOrUpdateLabel = "Install / Update Selected";
+        private const string ProgressVerb = "Processing";
 
-        private static readonly Color InstalledColor = new(0.40f, 0.78f, 0.40f);
-        private static readonly Color NotInstalledColor = new(0.70f, 0.70f, 0.70f);
-        private static readonly GUILayoutOption RefreshWidth = GUILayout.Width(70f);
-        private static readonly GUILayoutOption StatusWidth = GUILayout.Width(100f);
+        private static readonly GUILayoutOption ActionHeight = GUILayout.Height(InstallerTheme.Metrics.ActionButtonHeight);
+        private static readonly GUILayoutOption SecondaryHeight =
+            GUILayout.Height(InstallerTheme.Metrics.SecondaryButtonHeight);
+        private static readonly GUILayoutOption ToolbarHeight =
+            GUILayout.Height(InstallerTheme.Metrics.ToolbarButtonHeight);
+        private static readonly GUILayoutOption RefreshWidth = GUILayout.Width(InstallerTheme.Metrics.RefreshButtonWidth);
+        private static readonly GUILayoutOption EditListWidth =
+            GUILayout.Width(InstallerTheme.Metrics.EditListButtonWidth);
+        private static readonly GUILayoutOption ClearWidth = GUILayout.Width(InstallerTheme.Metrics.ClearButtonWidth);
+        private static readonly GUILayoutOption ExpandWidth = GUILayout.ExpandWidth(true);
 
-        // Cached so OnGUI does not allocate a new GUILayoutOption per element per repaint.
-        private static readonly GUILayoutOption ToggleWidth = GUILayout.Width(18f);
-        private static readonly GUILayoutOption VersionWidth = GUILayout.Width(90f);
+        private readonly InstallerStyles _styles = new();
 
         private string _status;
         private bool _hasFailures;
@@ -53,15 +65,14 @@ namespace Base.PackageInstaller.Window
         private PackageEntry[] _packages;
         private string[] _normalizedUrls;
         private bool[] _selected;
+        private PackageStatus[] _rowStatuses;
 
         private IReadOnlyDictionary<string, PackageStatus> _statuses = new Dictionary<string, PackageStatus>();
         private bool _statusChecked;
 
-        private GUIStyle _installedStyle;
-        private GUIStyle _notInstalledStyle;
-
         private PackageOperation _operation;
         private PackageStatusChecker _checker;
+        private PackageTableView _table;
 
 #region Unity Callbacks
         private void OnEnable()
@@ -70,6 +81,7 @@ namespace Base.PackageInstaller.Window
 
             _operation ??= new GitPackageOperation();
             _checker ??= new PackageStatusChecker();
+            _table ??= new PackageTableView(_styles);
 
             _operation.OnPackageStarted += HandlePackageStarted;
             _operation.OnPackageCompleted += HandlePackageCompleted;
@@ -86,28 +98,15 @@ namespace Base.PackageInstaller.Window
 
         private void OnGUI()
         {
-            EnsureStyles();
+            _styles.EnsureBuilt();
+
+            DrawHeader();
+            EditorGUILayout.Space(InstallerTheme.Metrics.SectionSpacing);
 
             DrawPackagesSection();
 
-            EditorGUILayout.Space(12);
-
             DrawProjectSetupSection();
-
-            EditorGUILayout.Space(8);
-
-            EditorGUILayout.LabelField(WindowTitle, EditorStyles.boldLabel);
-
-            EditorGUILayout.Space(4);
-
-            EditorGUILayout.HelpBox(Description, MessageType.Info);
-
-            if (string.IsNullOrEmpty(_status))
-                return;
-
-            EditorGUILayout.Space(4);
-
-            EditorGUILayout.HelpBox(_status, GetStatusMessageType());
+            DrawStatusFooter();
         }
 
         private void OnDisable()
@@ -117,6 +116,8 @@ namespace Base.PackageInstaller.Window
             _operation.OnPackageFailed -= HandlePackageFailed;
             _operation.OnAllPackagesCompleted -= HandleAllPackagesCompleted;
             _checker.OnCompleted -= HandleStatusesReady;
+
+            _styles.Dispose();
         }
 
         private void OnFocus() => RefreshStatuses();
@@ -125,99 +126,112 @@ namespace Base.PackageInstaller.Window
         [MenuItem("Tools/Git Package Manager", priority = -15)]
         public static void ShowWindow() => GetWindow<GitPackageManager>(WindowTitle);
 
-        private static void DrawTableHeader()
+        private void DrawHeader()
+        {
+            GUILayout.Label(WindowTitle, _styles.Title);
+            EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
+            GUILayout.Label(Description, _styles.Description);
+        }
+
+        private void DrawPackagesSection()
+        {
+            DrawPackagesToolbar();
+            EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
+
+            _table.Draw(_packages, _selected, _rowStatuses, _statusChecked, ref _scroll);
+
+            EditorGUILayout.Space(InstallerTheme.Metrics.ItemSpacing);
+            DrawSelectionButtons();
+
+            EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
+            DrawActionButton();
+        }
+
+        private void DrawPackagesToolbar()
         {
             EditorGUILayout.BeginHorizontal();
 
-            EditorGUILayout.LabelField(string.Empty, ToggleWidth);
-            EditorGUILayout.LabelField("Package", EditorStyles.boldLabel);
-            EditorGUILayout.LabelField("Status", EditorStyles.boldLabel, StatusWidth);
-            EditorGUILayout.LabelField("Version", EditorStyles.boldLabel, VersionWidth);
+            GUILayout.Label(PackagesHeader, _styles.SectionHeader);
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(RefreshLabel, _styles.SecondaryButton, RefreshWidth, ToolbarHeight))
+                RefreshAll();
+
+            GUILayout.Space(InstallerTheme.Metrics.TightSpacing);
+
+            if (GUILayout.Button(EditListLabel, _styles.SecondaryButton, EditListWidth, ToolbarHeight))
+                SettingsService.OpenProjectSettings(BasePackageSettingsProvider.Path);
 
             EditorGUILayout.EndHorizontal();
         }
 
-        private static void DrawProjectSetupSection()
+        private void DrawSelectionButtons()
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            if (GUILayout.Button(SelectAllLabel, _styles.SecondaryButton, SecondaryHeight, ExpandWidth))
+                SetAllSelected(true);
+
+            GUILayout.Space(InstallerTheme.Metrics.TightSpacing);
+
+            if (GUILayout.Button(DeselectAllLabel, _styles.SecondaryButton, SecondaryHeight, ExpandWidth))
+                SetAllSelected(false);
+
+            EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawActionButton()
+        {
+            EditorGUI.BeginDisabledGroup(_operation.IsRunning || IsBasePackageDev);
+
+            if (GUILayout.Button(GetActionLabel(), _styles.PrimaryButton, ActionHeight))
+                StartOperation();
+
+            EditorGUI.EndDisabledGroup();
+        }
+
+        private void DrawProjectSetupSection()
         {
             if (ProjectInputServiceSetup.IsSetUp)
                 return;
 
-            EditorGUILayout.LabelField("Project Setup", EditorStyles.boldLabel);
-            EditorGUILayout.Space(4);
+            EditorGUILayout.Space(InstallerTheme.Metrics.SectionSpacing);
 
-            const string label = "Create ProjectInputService";
+            GUILayout.Label(ProjectSetupHeader, _styles.SectionHeader);
+            EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
 
-            if (GUILayout.Button(label, ActionHeight))
+            if (GUILayout.Button(CreateInputServiceLabel, ActionHeight))
                 ProjectInputServiceSetup.Run();
         }
 
-        private static string DescribeResult(PackageResult result)
+        private void DrawStatusFooter()
         {
-            if (!result.Success)
-                return $"{result.Label} failed: {result.Error}";
-
-            string resultName = string.IsNullOrEmpty(result.Name)
-                ? result.Label
-                : result.Name;
-
-            if (string.IsNullOrEmpty(result.Version))
-                return $"Installed {resultName}.";
-
-            if (!result.Changed || result.PreviousVersion == result.Version)
-                return $"{resultName} {UnchangedPhrase} ({result.Version}).";
-
-            if (string.IsNullOrEmpty(result.PreviousVersion))
-                return $"Installed {resultName} {result.Version}.";
-
-            return $"Updated {resultName} {result.PreviousVersion} → {result.Version}.";
-        }
-
-        private static string BuildSummary(OperationSummary summary)
-        {
-            StringBuilder builder = new();
-
-            builder.Append($"Done. {summary.SuccessCount} ok");
-
-            if (summary.ChangedCount > 0)
-                builder.Append($", {summary.ChangedCount} changed");
-
-            if (summary.UnchangedCount > 0)
-                builder.Append($", {summary.UnchangedCount} unchanged");
-
-            if (summary.FailedCount > 0)
-                builder.Append($", {summary.FailedCount} failed");
-
-            builder.Append('.');
-
-            foreach (PackageResult result in summary.Results)
-            {
-                builder.Append('\n');
-                builder.Append(DescribeResult(result));
-            }
-
-            return builder.ToString();
-        }
-
-        private void EnsureStyles()
-        {
-            if (_installedStyle != null)
+            if (string.IsNullOrEmpty(_status))
                 return;
 
-            _installedStyle = new GUIStyle(EditorStyles.label)
-            {
-                normal =
-                {
-                    textColor = InstalledColor
-                }
-            };
+            EditorGUILayout.Space(InstallerTheme.Metrics.SectionSpacing);
 
-            _notInstalledStyle = new GUIStyle(EditorStyles.label)
-            {
-                normal =
-                {
-                    textColor = NotInstalledColor
-                }
-            };
+            EditorGUILayout.BeginHorizontal();
+
+            GUILayout.Label(ResultHeader, _styles.SectionHeader);
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(ClearLabel, _styles.SecondaryButton, ClearWidth, ToolbarHeight))
+                ClearStatus();
+
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
+
+            EditorGUILayout.HelpBox(_status, GetStatusMessageType());
+        }
+
+        private void ClearStatus()
+        {
+            _status = null;
+            _hasFailures = false;
+
+            Repaint();
         }
 
         private void RefreshPackages()
@@ -225,12 +239,23 @@ namespace Base.PackageInstaller.Window
             _packages = BasePackageRegistry.instance.SortedPackages;
             _normalizedUrls = new string[_packages.Length];
             _selected = new bool[_packages.Length];
+            _rowStatuses = new PackageStatus[_packages.Length];
 
             for (int i = 0; i < _packages.Length; i++)
             {
                 _normalizedUrls[i] = PackageStatusChecker.Normalize(_packages[i].Url);
                 _selected[i] = true;
             }
+
+            FillRowStatuses();
+        }
+
+        // Snapshots the current statuses into a per-row array so drawing does not do a dictionary
+        // lookup for every package on every repaint.
+        private void FillRowStatuses()
+        {
+            for (int i = 0; i < _packages.Length; i++)
+                _rowStatuses[i] = _statuses.GetValueOrDefault(_normalizedUrls[i]);
         }
 
         private void RefreshStatuses()
@@ -256,100 +281,20 @@ namespace Base.PackageInstaller.Window
             RefreshStatuses();
         }
 
-        private void DrawPackagesSection()
-        {
-            EditorGUILayout.BeginHorizontal();
-
-            EditorGUILayout.LabelField("Git Packages", EditorStyles.boldLabel);
-
-            if (GUILayout.Button("Refresh", RefreshWidth))
-                RefreshAll();
-
-            if (GUILayout.Button("Edit List", EditListWidth))
-                SettingsService.OpenProjectSettings(BasePackageSettingsProvider.Path);
-
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space(4);
-
-            DrawTableHeader();
-
-            _scroll = EditorGUILayout.BeginScrollView(_scroll);
-
-            for (int i = 0; i < _packages.Length; i++)
-                DrawPackageRow(i);
-
-            EditorGUILayout.EndScrollView();
-
-            EditorGUILayout.Space(8);
-
-            EditorGUILayout.BeginHorizontal();
-
-            if (GUILayout.Button("Select All"))
-                SetAllSelected(true);
-
-            if (GUILayout.Button("Deselect All"))
-                SetAllSelected(false);
-
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.Space(4);
-
-            EditorGUI.BeginDisabledGroup(_operation.IsRunning || IsBasePackageDev);
-
-            if (GUILayout.Button(GetActionLabel(), ActionHeight))
-                StartOperation();
-
-            EditorGUI.EndDisabledGroup();
-        }
-
-        private void DrawPackageRow(int index)
-        {
-            PackageStatus status = GetStatus(index);
-
-            EditorGUILayout.BeginHorizontal();
-
-            _selected[index] = EditorGUILayout.Toggle(_selected[index], ToggleWidth);
-
-            EditorGUILayout.LabelField(_packages[index].Name);
-
-            EditorGUILayout.LabelField(GetStatusText(status), GetStatusStyle(status), StatusWidth);
-
-            string version = status.IsInstalled
-                ? status.Version
-                : MissingVersion;
-
-            EditorGUILayout.LabelField(version, VersionWidth);
-
-            EditorGUILayout.EndHorizontal();
-        }
-
-        private PackageStatus GetStatus(int index) => _statuses.GetValueOrDefault(_normalizedUrls[index]);
-
-        private string GetStatusText(PackageStatus status)
-        {
-            if (!_statusChecked)
-                return "Checking…";
-
-            return status.IsInstalled
-                ? "Installed"
-                : "Not installed";
-        }
-
-        private GUIStyle GetStatusStyle(PackageStatus status)
-        {
-            if (!_statusChecked)
-                return EditorStyles.label;
-
-            return status.IsInstalled
-                ? _installedStyle
-                : _notInstalledStyle;
-        }
-
         private string GetActionLabel()
         {
+            return ResolveAction() switch
+            {
+                EInstallAction.Install => InstallLabel,
+                EInstallAction.Update => UpdateLabel,
+                _ => InstallOrUpdateLabel
+            };
+        }
+
+        private EInstallAction ResolveAction()
+        {
             if (!_statusChecked)
-                return InstallOrUpdateLabel;
+                return EInstallAction.InstallOrUpdate;
 
             int installed = 0;
             int notInstalled = 0;
@@ -359,19 +304,19 @@ namespace Base.PackageInstaller.Window
                 if (!_selected[i])
                     continue;
 
-                if (GetStatus(i).IsInstalled)
+                if (_rowStatuses[i].IsInstalled)
                     installed++;
                 else
                     notInstalled++;
             }
 
             if (notInstalled == 0 && installed > 0)
-                return UpdateLabel;
+                return EInstallAction.Update;
 
             if (installed == 0 && notInstalled > 0)
-                return InstallLabel;
+                return EInstallAction.Install;
 
-            return InstallOrUpdateLabel;
+            return EInstallAction.InstallOrUpdate;
         }
 
         private void SetAllSelected(bool value)
@@ -411,6 +356,7 @@ namespace Base.PackageInstaller.Window
             _statuses = statuses;
             _statusChecked = true;
 
+            FillRowStatuses();
             Repaint();
         }
 
@@ -421,19 +367,19 @@ namespace Base.PackageInstaller.Window
         }
 
         private static void HandlePackageCompleted(PackageResult result)
-            => Debug.Log($"{WindowTitle}: {DescribeResult(result)}");
+            => Debug.Log($"{WindowTitle}: {OperationSummaryFormatter.Describe(result)}");
 
         private void HandlePackageFailed(PackageResult result)
         {
             _hasFailures = true;
 
-            Debug.LogWarning($"{WindowTitle}: {DescribeResult(result)}");
+            Debug.LogWarning($"{WindowTitle}: {OperationSummaryFormatter.Describe(result)}");
         }
 
         private void HandleAllPackagesCompleted(OperationSummary summary)
         {
             _hasFailures = summary.HasFailures;
-            _status = BuildSummary(summary);
+            _status = OperationSummaryFormatter.BuildSummary(summary);
 
             if (summary.HasFailures)
                 Debug.LogWarning($"{WindowTitle}: {_status}");
@@ -441,7 +387,6 @@ namespace Base.PackageInstaller.Window
                 Debug.Log($"{WindowTitle}: {_status}");
 
             RefreshStatuses();
-
             Repaint();
         }
     }
