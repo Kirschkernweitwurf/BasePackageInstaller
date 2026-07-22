@@ -28,17 +28,17 @@ namespace Base.PackageInstaller.Window
         private const string UnchangedPhrase = "is already up to date";
         private const string UpdateLabel = "Update Selected";
         private const string WindowTitle = "Git Package Manager";
+        private static readonly GUILayoutOption ActionHeight = GUILayout.Height(30f);
+        private static readonly GUILayoutOption EditListWidth = GUILayout.Width(80f);
 
         private static readonly Color InstalledColor = new(0.40f, 0.78f, 0.40f);
         private static readonly Color NotInstalledColor = new(0.70f, 0.70f, 0.70f);
+        private static readonly GUILayoutOption RefreshWidth = GUILayout.Width(70f);
+        private static readonly GUILayoutOption StatusWidth = GUILayout.Width(100f);
 
         // Cached so OnGUI does not allocate a new GUILayoutOption per element per repaint.
         private static readonly GUILayoutOption ToggleWidth = GUILayout.Width(18f);
-        private static readonly GUILayoutOption StatusWidth = GUILayout.Width(100f);
         private static readonly GUILayoutOption VersionWidth = GUILayout.Width(90f);
-        private static readonly GUILayoutOption RefreshWidth = GUILayout.Width(70f);
-        private static readonly GUILayoutOption EditListWidth = GUILayout.Width(80f);
-        private static readonly GUILayoutOption ActionHeight = GUILayout.Height(30f);
 
         private string _status;
         private bool _hasFailures;
@@ -143,6 +143,53 @@ namespace Base.PackageInstaller.Window
 
             if (GUILayout.Button(Label, ActionHeight))
                 ProjectInputServiceSetup.Run();
+        }
+
+        private static string DescribeResult(PackageResult result)
+        {
+            if (!result.Success)
+                return $"{result.Label} failed: {result.Error}";
+
+            string resultName = string.IsNullOrEmpty(result.Name)
+                ? result.Label
+                : result.Name;
+
+            if (string.IsNullOrEmpty(result.Version))
+                return $"Installed {resultName}.";
+
+            if (!result.Changed || result.PreviousVersion == result.Version)
+                return $"{resultName} {UnchangedPhrase} ({result.Version}).";
+
+            if (string.IsNullOrEmpty(result.PreviousVersion))
+                return $"Installed {resultName} {result.Version}.";
+
+            return $"Updated {resultName} {result.PreviousVersion} → {result.Version}.";
+        }
+
+        private static string BuildSummary(OperationSummary summary)
+        {
+            StringBuilder builder = new();
+
+            builder.Append($"Done. {summary.SuccessCount} ok");
+
+            if (summary.ChangedCount > 0)
+                builder.Append($", {summary.ChangedCount} changed");
+
+            if (summary.UnchangedCount > 0)
+                builder.Append($", {summary.UnchangedCount} unchanged");
+
+            if (summary.FailedCount > 0)
+                builder.Append($", {summary.FailedCount} failed");
+
+            builder.Append('.');
+
+            foreach (PackageResult result in summary.Results)
+            {
+                builder.Append('\n');
+                builder.Append(DescribeResult(result));
+            }
+
+            return builder.ToString();
         }
 
         private void EnsureStyles()
@@ -390,53 +437,6 @@ namespace Base.PackageInstaller.Window
             RefreshStatuses();
 
             Repaint();
-        }
-
-        private static string DescribeResult(PackageResult result)
-        {
-            if (!result.Success)
-                return $"{result.Label} failed: {result.Error}";
-
-            string resultName = string.IsNullOrEmpty(result.Name)
-                ? result.Label
-                : result.Name;
-
-            if (string.IsNullOrEmpty(result.Version))
-                return $"Installed {resultName}.";
-
-            if (!result.Changed || result.PreviousVersion == result.Version)
-                return $"{resultName} {UnchangedPhrase} ({result.Version}).";
-
-            if (string.IsNullOrEmpty(result.PreviousVersion))
-                return $"Installed {resultName} {result.Version}.";
-
-            return $"Updated {resultName} {result.PreviousVersion} → {result.Version}.";
-        }
-
-        private static string BuildSummary(OperationSummary summary)
-        {
-            StringBuilder builder = new();
-
-            builder.Append($"Done. {summary.SuccessCount} ok");
-
-            if (summary.ChangedCount > 0)
-                builder.Append($", {summary.ChangedCount} changed");
-
-            if (summary.UnchangedCount > 0)
-                builder.Append($", {summary.UnchangedCount} unchanged");
-
-            if (summary.FailedCount > 0)
-                builder.Append($", {summary.FailedCount} failed");
-
-            builder.Append('.');
-
-            foreach (PackageResult result in summary.Results)
-            {
-                builder.Append('\n');
-                builder.Append(DescribeResult(result));
-            }
-
-            return builder.ToString();
         }
     }
 }

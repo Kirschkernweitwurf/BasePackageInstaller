@@ -14,13 +14,13 @@ namespace Base.PackageInstaller.Settings
         private const string PackagesProperty = "packages";
         private const string SettingsPath = "Project/Custom Tools/Git Packages";
 
-        private static SerializedObject _serializedObject;
-        private static SerializedProperty _packagesProperty;
-
         /// <summary>
         /// The settings path used to open this page programmatically.
         /// </summary>
         public static string Path => SettingsPath;
+
+        private static SerializedObject _serializedObject;
+        private static SerializedProperty _packagesProperty;
 
         [SettingsProvider]
         private static SettingsProvider Create() => new(SettingsPath, SettingsScope.Project)
@@ -34,6 +34,7 @@ namespace Base.PackageInstaller.Settings
                 "updater",
                 "base"
             },
+
             // Created lazily so the registry singleton is not loaded and seeded on every
             // domain reload; it is only touched once this settings page is actually opened.
             activateHandler = (_, _) =>

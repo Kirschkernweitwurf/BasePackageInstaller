@@ -1,18 +1,18 @@
 {
-    "name": "Base.PackageInstaller",
-    "rootNamespace": "Base.PackageInstaller",
-    "references": [
-        "GUID:75469ad4d38634e559750d17036d5f7c"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "Base.PackageInstaller",
+  "rootNamespace": "Base.PackageInstaller",
+  "references": [
+    "GUID:75469ad4d38634e559750d17036d5f7c"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
 }
