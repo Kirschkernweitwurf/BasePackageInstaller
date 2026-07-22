@@ -28,7 +28,8 @@ namespace Base.PackageInstaller.Data
                 EnsureSeeded();
 
                 PackageEntry[] sorted = packages.ToArray();
-                Array.Sort(sorted, static (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+                Array.Sort(sorted,
+                    comparison: static (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
                 return sorted;
             }
