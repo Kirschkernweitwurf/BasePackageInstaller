@@ -37,14 +37,24 @@ namespace Base.PackageInstaller.Operations.Persistence
         /// <param name="snapshot">The pre-operation installed packages keyed by name.</param>
         /// <param name="hasSnapshot">Whether the snapshot has already been captured.</param>
         /// <returns>A state object ready to be serialized.</returns>
-        public static PackageOperationState Create(IEnumerable<string> remaining, IReadOnlyList<PackageResult> results,
-            IReadOnlyDictionary<string, InstalledPackage> snapshot, bool hasSnapshot) => new()
+        public static PackageOperationState Create(IReadOnlyCollection<string> remaining,
+            IReadOnlyList<PackageResult> results, IReadOnlyDictionary<string, InstalledPackage> snapshot,
+            bool hasSnapshot)
         {
-            remainingUrls = new List<string>(remaining).ToArray(),
-            results = ToSerializable(results),
-            snapshot = ToSerializable(snapshot),
-            hasSnapshot = hasSnapshot
-        };
+            string[] urls = new string[remaining.Count];
+            int index = 0;
+
+            foreach (string url in remaining)
+                urls[index++] = url;
+
+            return new PackageOperationState
+            {
+                remainingUrls = urls,
+                results = ToSerializable(results),
+                snapshot = ToSerializable(snapshot),
+                hasSnapshot = hasSnapshot
+            };
+        }
 
         /// <summary>
         /// Rebuilds the gathered results in their original order.

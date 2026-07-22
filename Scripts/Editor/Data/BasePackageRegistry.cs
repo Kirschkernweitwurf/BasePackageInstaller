@@ -1,6 +1,6 @@
 #if UNITY_EDITOR
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,15 +21,16 @@ namespace Base.PackageInstaller.Data
         [SerializeField] private List<PackageEntry> packages = new();
 
         /// <summary>The registered packages sorted alphabetically by name.</summary>
-        public IReadOnlyList<PackageEntry> SortedPackages => Packages.OrderBy(entry => entry.Name).ToArray();
-
-        /// <summary>The registered packages in declaration order.</summary>
-        private IReadOnlyList<PackageEntry> Packages
+        public PackageEntry[] SortedPackages
         {
             get
             {
                 EnsureSeeded();
-                return packages;
+
+                PackageEntry[] sorted = packages.ToArray();
+                Array.Sort(sorted, static (a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+
+                return sorted;
             }
         }
 

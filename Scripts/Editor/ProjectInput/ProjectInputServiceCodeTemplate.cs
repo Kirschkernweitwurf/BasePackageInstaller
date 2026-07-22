@@ -9,12 +9,12 @@ namespace Base.PackageInstaller.ProjectInput
         private const string NamespaceToken = "__NAMESPACE__";
 
         private const string Template = @"using System.Collections.Generic;
-using Base.AttributePackage.References;
+using Base.AttributePackage;
 using Base.CorePackage.Services;
 using Input;
 using UnityEngine.InputSystem;
 
-namespace __NAMESPACE__
+namespace Generated.Input
 {
     /// <summary>
     /// Project-specific input service. Owns the generated <see cref=""PlayerInputActions""/>

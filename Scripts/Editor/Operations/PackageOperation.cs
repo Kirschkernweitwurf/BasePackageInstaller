@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Base.PackageInstaller.Data;
 using Base.PackageInstaller.Operations.Persistence;
 using UnityEditor;
@@ -142,7 +141,7 @@ namespace Base.PackageInstaller.Operations
             return previous.Version != info.version;
         }
 
-        private static string GetLabel(string url) => url.Split('/').Last();
+        private static string GetLabel(string url) => url[(url.LastIndexOf('/') + 1)..];
 
         private void ResetState()
         {

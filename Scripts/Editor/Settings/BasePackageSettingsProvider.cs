@@ -14,35 +14,48 @@ namespace Base.PackageInstaller.Settings
         private const string PackagesProperty = "packages";
         private const string SettingsPath = "Project/Custom Tools/Git Packages";
 
+        private static SerializedObject _serializedObject;
+        private static SerializedProperty _packagesProperty;
+
         /// <summary>
         /// The settings path used to open this page programmatically.
         /// </summary>
         public static string Path => SettingsPath;
 
         [SettingsProvider]
-        private static SettingsProvider Create()
+        private static SettingsProvider Create() => new(SettingsPath, SettingsScope.Project)
         {
-            SerializedObject serializedObject = new(BasePackageRegistry.instance);
-            SerializedProperty packagesProperty = serializedObject.FindProperty(PackagesProperty);
-
-            return new SettingsProvider(SettingsPath, SettingsScope.Project)
+            label = "Git Packages",
+            keywords = new HashSet<string>
             {
-                label = "Git Packages",
-                keywords = new HashSet<string>
-                {
-                    "package",
-                    "git",
-                    "installer",
-                    "updater",
-                    "base"
-                },
-                guiHandler = _ => DrawGui(serializedObject, packagesProperty)
-            };
-        }
+                "package",
+                "git",
+                "installer",
+                "updater",
+                "base"
+            },
+            // Created lazily so the registry singleton is not loaded and seeded on every
+            // domain reload; it is only touched once this settings page is actually opened.
+            activateHandler = (_, _) =>
+            {
+                _serializedObject = new SerializedObject(BasePackageRegistry.instance);
+                _packagesProperty = _serializedObject.FindProperty(PackagesProperty);
+            },
+            deactivateHandler = () =>
+            {
+                _serializedObject?.Dispose();
+                _serializedObject = null;
+                _packagesProperty = null;
+            },
+            guiHandler = _ => DrawGui()
+        };
 
-        private static void DrawGui(SerializedObject serializedObject, SerializedProperty packagesProperty)
+        private static void DrawGui()
         {
-            serializedObject.Update();
+            if (_serializedObject == null)
+                return;
+
+            _serializedObject.Update();
 
             EditorGUILayout.HelpBox("Packages available in the Base Package Manager window. "
                 + "Name is the label shown; URL is the Git dependency to add.",
@@ -52,12 +65,12 @@ namespace Base.PackageInstaller.Settings
 
             EditorGUI.BeginChangeCheck();
 
-            EditorGUILayout.PropertyField(packagesProperty, true);
+            EditorGUILayout.PropertyField(_packagesProperty, true);
 
             if (!EditorGUI.EndChangeCheck())
                 return;
 
-            serializedObject.ApplyModifiedProperties();
+            _serializedObject.ApplyModifiedProperties();
             BasePackageRegistry.instance.Persist();
         }
     }
