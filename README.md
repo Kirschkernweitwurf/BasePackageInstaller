@@ -33,6 +33,15 @@ The button label adapts to your selection: **Install Selected** when nothing sel
 
 **Refresh** re-checks install statuses and pulls in any new or changed default packages. **Edit List** jumps to the registry in Project Settings.
 
+## The window UI
+
+The package table lives in a rounded card with alternating row striping and a colored status pill per package: green for **Installed**, grey for **Not installed**, with the installed version next to it. The look adapts to both the dark and light editor skins.
+
+- **Resizable columns**: drag the divider lines between the columns to resize them. The dividers span the whole table, so you can grab them at any row, and the widths are remembered across sessions.
+- **Clear the result**: after a run, the result summary appears at the bottom with a **Clear** button to dismiss it.
+
+All spacings, sizes and colors are defined in a single theme class, so the look can be tuned in one place.
+
 ## The package registry
 
 The list of available packages is stored per project in `ProjectSettings/BasePackageRegistry.asset`, so it can be version controlled and edited per project. It is seeded with the default base packages on first use; after that you can add, remove or rename entries under **Project Settings → Custom Tools → Git Packages**. New or changed defaults are merged in on **Refresh** without discarding your project-specific entries.
@@ -43,9 +52,9 @@ The window reports clearly what is going on:
 
 - A live status line shows which package is being processed.
 - Each package logs its result to the Console with the resolved name and version, for example:
-  - `Installed Tools 1.2.0.`
-  - `Updated UI 1.1.0 → 1.2.0.`
-  - `Core is already up to date (1.0.4).`
+    - `Installed Tools 1.2.0.`
+    - `Updated UI 1.1.0 → 1.2.0.`
+    - `Core is already up to date (1.0.4).`
 - If a package runs into a problem, the run **does not stop**. Remaining packages are still processed, the failure is logged as a warning and the final status box shows a short summary like `Done. 5 ok, 1 failed.` followed by a per-package breakdown.
 - A package install can trigger a script recompile and domain reload mid-run. Progress is persisted and the run resumes automatically where it left off.
 

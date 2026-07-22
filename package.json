@@ -1,8 +1,8 @@
 {
   "name": "com.baseprojectpackages.installer",
   "displayName": "Base Package Installer",
-  "description": "One-click installer for all base project packages.",
-  "version": "1.2.5",
+  "description": "Editor window for installing and updating all base project packages (and any other Git packages) in one click. Shows each package's install status and version in a resizable table, lets you pick exactly which packages to process, survives the domain reloads that installs trigger, and reports a per-package result summary. Includes one-click project setup for the preferred input service.",
+  "version": "1.2.6",
   "unity": "6000.3",
   "author": {
     "name": "Jonathan Alber"
