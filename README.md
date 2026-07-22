@@ -60,7 +60,6 @@ The default registry contains the following:
 | `Core` | Core systems (ServiceLocator, GameActions, Tweening, etc.) |
 | `UI` | UI helpers and menu management |
 | `Utility` | Common utilities |
-| `ScreenShake` | Screen shake effects |
 | `Save System` | Saving and loading game data |
 | `Settings System` | Game settings management |
 | `Localization` | Localization support |
