@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using Base.PackageInstaller.Data;
@@ -19,36 +18,39 @@ namespace Base.PackageInstaller.Operations
     /// continued via <see cref="Resume"/> once the domain has reloaded.
     /// </para>
     /// </summary>
-    public abstract class PackageOperation
+    internal abstract class PackageOperation
     {
+        private const char LabelSeparator = '/';
+        private const string UnknownError = "Unknown error";
+
         /// <summary>
         /// Invoked when a package operation starts.
         /// The string parameter is the friendly label of the package being processed.
         /// </summary>
-        public event Action<string> OnPackageStarted;
+        internal event Action<string> OnPackageStarted;
 
         /// <summary>
         /// Invoked when a package operation completes successfully.
         /// The parameter describes the resolved package and version.
         /// </summary>
-        public event Action<PackageResult> OnPackageCompleted;
+        internal event Action<PackageResult> OnPackageCompleted;
 
         /// <summary>
         /// Invoked when a package operation fails.
         /// The run continues with the next package after this is raised.
         /// </summary>
-        public event Action<PackageResult> OnPackageFailed;
+        internal event Action<PackageResult> OnPackageFailed;
 
         /// <summary>
         /// Invoked when all package operations have finished.
         /// The summary reports how many packages succeeded, changed, or failed.
         /// </summary>
-        public event Action<OperationSummary> OnAllPackagesCompleted;
+        internal event Action<OperationSummary> OnAllPackagesCompleted;
 
         /// <summary>
         /// Indicates whether a package operation is currently running.
         /// </summary>
-        public bool IsRunning { get; private set; }
+        internal bool IsRunning { get; private set; }
 
         /// <summary>
         /// The key under which this operation's progress is persisted.
@@ -66,11 +68,18 @@ namespace Base.PackageInstaller.Operations
         private bool _hasSnapshot;
 
         /// <summary>
+        /// Creates a package manager request for the given URL.
+        /// </summary>
+        /// <param name="url">The URL of the package to process.</param>
+        /// <returns>A request object representing the package operation.</returns>
+        protected abstract Request CreateRequest(string url);
+
+        /// <summary>
         /// Starts processing the given package URLs sequentially.
         /// If an operation is already running, this method does nothing.
         /// </summary>
         /// <param name="packageUrls">The URLs of the packages to process.</param>
-        public void Run(IEnumerable<string> packageUrls)
+        internal void Run(IEnumerable<string> packageUrls)
         {
             if (IsRunning)
                 return;
@@ -98,7 +107,7 @@ namespace Base.PackageInstaller.Operations
         /// Call this after the owner is re-created following a domain reload
         /// (for example from an editor window's <c>OnEnable</c>).
         /// </remarks>
-        public void Resume()
+        internal void Resume()
         {
             if (IsRunning)
                 return;
@@ -126,13 +135,6 @@ namespace Base.PackageInstaller.Operations
                 BeginSnapshot();
         }
 
-        /// <summary>
-        /// Creates a package manager request for the given URL.
-        /// </summary>
-        /// <param name="url">The URL of the package to process.</param>
-        /// <returns>A request object representing the package operation.</returns>
-        protected abstract Request CreateRequest(string url);
-
         private static bool HasChanged(InstalledPackage previous, PackageInfo info)
         {
             if (!string.IsNullOrEmpty(previous.Hash) && info.git != null)
@@ -141,7 +143,7 @@ namespace Base.PackageInstaller.Operations
             return previous.Version != info.version;
         }
 
-        private static string GetLabel(string url) => url[(url.LastIndexOf('/') + 1)..];
+        private static string GetLabel(string url) => url[(url.LastIndexOf(LabelSeparator) + 1)..];
 
         private void ResetState()
         {
@@ -242,8 +244,9 @@ namespace Base.PackageInstaller.Operations
         private PackageResult BuildResult()
         {
             if (_currentRequest.Status == StatusCode.Failure)
-                return Failure(_currentRequest.Error?.message ?? "Unknown error");
+                return Failure(_currentRequest.Error?.message ?? UnknownError);
 
+            // Only an AddRequest carries package info; anything else is reported as a bare success.
             if (_currentRequest is not AddRequest
                 {
                     Result:
@@ -307,4 +310,3 @@ namespace Base.PackageInstaller.Operations
         }
     }
 }
-#endif

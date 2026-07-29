@@ -1,14 +1,20 @@
 namespace Base.PackageInstaller.Data
 {
     /// <summary>
-    /// Represents a package installed in the project, with its version and hash.
+    /// A package installed in the project, with the version and Git hash it resolved to.
     /// </summary>
-    public readonly struct InstalledPackage
+    internal readonly struct InstalledPackage
     {
-        public readonly string Version;
-        public readonly string Hash;
+        /// <summary>The installed version, or null if the package was not installed.</summary>
+        internal string Version { get; }
 
-        public InstalledPackage(string version, string hash)
+        /// <summary>The installed Git commit hash, or null for packages from another source.</summary>
+        internal string Hash { get; }
+
+        /// <summary>Creates an entry describing an installed package.</summary>
+        /// <param name="version">The installed version.</param>
+        /// <param name="hash">The installed Git commit hash.</param>
+        internal InstalledPackage(string version, string hash)
         {
             Version = version;
             Hash = hash;

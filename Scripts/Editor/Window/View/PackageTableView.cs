@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using Base.PackageInstaller.Data;
 using Base.PackageInstaller.Window.Theme;
 using UnityEditor;
@@ -14,20 +13,28 @@ namespace Base.PackageInstaller.Window.View
     /// </summary>
     internal sealed class PackageTableView
     {
+        private const string MissingVersion = "-";
         private const string PackageColumn = "Package";
         private const string StatusColumn = "Status";
         private const string VersionColumn = "Version";
-        private const string MissingVersion = "—";
 
-        private static readonly GUIContent CheckingContent = new("Checking…");
+        private static readonly GUIContent CheckingContent = new("Checking...");
         private static readonly GUIContent InstalledContent = new("Installed");
         private static readonly GUIContent NotInstalledContent = new("Not installed");
 
         private readonly InstallerStyles _styles;
         private readonly TableColumnLayout _columns = new();
 
+        /// <summary>Creates the table view.</summary>
+        /// <param name="styles">The shared style cache the table draws with.</param>
         internal PackageTableView(InstallerStyles styles) => _styles = styles;
 
+        /// <summary>Draws the whole table, including the header and the resizable dividers.</summary>
+        /// <param name="packages">The packages to list, one row each.</param>
+        /// <param name="selected">The per-row selection flags, written back on user input.</param>
+        /// <param name="statuses">The per-row install status.</param>
+        /// <param name="statusChecked">False while the install statuses are still being queried.</param>
+        /// <param name="scroll">The scroll position of the table, written back on user input.</param>
         internal void Draw(PackageEntry[] packages, bool[] selected, PackageStatus[] statuses,
             bool statusChecked, ref Vector2 scroll)
         {
@@ -52,6 +59,43 @@ namespace Base.PackageInstaller.Window.View
             EditorGUILayout.EndVertical();
             EditorGUILayout.EndScrollView();
         }
+
+        private static Rect ReserveRow(float height)
+            => GUILayoutUtility.GetRect(0f, height, GUILayout.ExpandWidth(true));
+
+        private static Rect ColumnsArea(Rect row)
+        {
+            float inset = InstallerTheme.Metrics.TableEdgeInset;
+
+            return new Rect(row.x + inset, row.y, row.width - inset * 2f, row.height);
+        }
+
+        private static Rect InsetVertically(Rect card)
+        {
+            float padding = InstallerTheme.Metrics.CardVerticalPadding;
+
+            return new Rect(card.x, card.y + padding, card.width, card.height - padding * 2f);
+        }
+
+        private static Rect ToggleRect(Rect cell)
+        {
+            float size = InstallerTheme.Metrics.ToggleSize;
+            float y = cell.y + (cell.height - size) * 0.5f;
+
+            return new Rect(cell.x, y, size, size);
+        }
+
+        private static void DrawSeparator()
+        {
+            Rect line = ReserveRow(InstallerTheme.Metrics.SeparatorThickness);
+
+            if (Event.current.type == EventType.Repaint)
+                EditorGUI.DrawRect(line, InstallerTheme.Palette.Separator);
+        }
+
+        private static string VersionText(PackageStatus status) => status.IsInstalled
+            ? status.Version
+            : MissingVersion;
 
         private void DrawHeader(Rect row)
         {
@@ -100,46 +144,5 @@ namespace Base.PackageInstaller.Window.View
 
             GUI.Label(pill, content, style);
         }
-
-        private static Rect ReserveRow(float height)
-            => GUILayoutUtility.GetRect(0f, height, GUILayout.ExpandWidth(true));
-
-        private static Rect ColumnsArea(Rect row)
-        {
-            float inset = InstallerTheme.Metrics.TableEdgeInset;
-
-            return new Rect(row.x + inset, row.y, row.width - inset * 2f, row.height);
-        }
-
-        private static Rect InsetVertically(Rect card)
-        {
-            float padding = InstallerTheme.Metrics.CardVerticalPadding;
-
-            return new Rect(card.x, card.y + padding, card.width, card.height - padding * 2f);
-        }
-
-        private static Rect ToggleRect(Rect cell)
-        {
-            float size = InstallerTheme.Metrics.ToggleSize;
-            float y = cell.y + (cell.height - size) * 0.5f;
-
-            return new Rect(cell.x, y, size, size);
-        }
-
-        private static void DrawSeparator()
-        {
-            Rect line = ReserveRow(InstallerTheme.Metrics.SeparatorThickness);
-
-            if (Event.current.type == EventType.Repaint)
-                EditorGUI.DrawRect(line, InstallerTheme.Palette.Separator);
-        }
-
-        private static string VersionText(PackageStatus status)
-        {
-            return status.IsInstalled
-                ? status.Version
-                : MissingVersion;
-        }
     }
 }
-#endif
