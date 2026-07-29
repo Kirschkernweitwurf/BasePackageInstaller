@@ -1,30 +1,31 @@
-#if UNITY_EDITOR
 using System;
 using UnityEngine;
 
 namespace Base.PackageInstaller.Data
 {
     /// <summary>
-    /// Represents a package entry with a friendly name and a Git URL.
+    /// A package entry with a friendly name and a Git URL.
     /// Serializable so it can be edited in the package registry inspector.
     /// </summary>
     [Serializable]
-    public sealed class PackageEntry
+    internal sealed class PackageEntry
     {
         [SerializeField] private string name;
         [SerializeField] private string url;
 
         /// <summary>The friendly name shown in the window.</summary>
-        public string Name => name;
+        internal string Name => name;
 
         /// <summary>The Git URL the package is added from.</summary>
-        public string Url => url;
+        internal string Url => url;
 
-        public PackageEntry(string name, string url)
+        /// <summary>Creates an entry for a single Git package.</summary>
+        /// <param name="name">The friendly name shown in the window.</param>
+        /// <param name="url">The Git URL the package is added from.</param>
+        internal PackageEntry(string name, string url)
         {
             this.name = name;
             this.url = url;
         }
     }
 }
-#endif

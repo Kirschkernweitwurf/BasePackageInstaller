@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using Base.PackageInstaller.Data;
@@ -13,15 +12,18 @@ namespace Base.PackageInstaller.Operations
     /// Queries the project's installed packages and maps them to registry entries by Git URL,
     /// so the window can show which packages are installed and at what version.
     /// </summary>
-    public sealed class PackageStatusChecker
+    internal sealed class PackageStatusChecker
     {
+        private const char PackageIdSeparator = '@';
+        private const char UrlTrailingSlash = '/';
+
         /// <summary>
         /// Invoked when a refresh finishes. The dictionary is keyed by normalized Git URL.
         /// </summary>
-        public event Action<IReadOnlyDictionary<string, PackageStatus>> OnCompleted;
+        internal event Action<IReadOnlyDictionary<string, PackageStatus>> OnCompleted;
 
         /// <summary>True while a query is in progress.</summary>
-        public bool IsRunning { get; private set; }
+        internal bool IsRunning { get; private set; }
 
         private ListRequest _request;
 
@@ -30,18 +32,18 @@ namespace Base.PackageInstaller.Operations
         /// </summary>
         /// <param name="url">The URL to normalize.</param>
         /// <returns>The trimmed URL without a trailing slash.</returns>
-        public static string Normalize(string url)
+        internal static string Normalize(string url)
         {
             if (string.IsNullOrEmpty(url))
                 return string.Empty;
 
-            return url.Trim().TrimEnd('/');
+            return url.Trim().TrimEnd(UrlTrailingSlash);
         }
 
         /// <summary>
         /// Starts an offline query of installed packages. Does nothing if one is already running.
         /// </summary>
-        public void Refresh()
+        internal void Refresh()
         {
             if (IsRunning)
                 return;
@@ -58,7 +60,7 @@ namespace Base.PackageInstaller.Operations
                 return;
 
             // A git package id has the form "name@url"; everything after the first '@' is the source URL.
-            int separator = info.packageId.IndexOf('@');
+            int separator = info.packageId.IndexOf(PackageIdSeparator);
 
             if (separator < 0)
                 return;
@@ -94,4 +96,3 @@ namespace Base.PackageInstaller.Operations
         }
     }
 }
-#endif

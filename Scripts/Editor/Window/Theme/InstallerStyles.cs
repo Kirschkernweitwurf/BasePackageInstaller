@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -12,25 +11,32 @@ namespace Base.PackageInstaller.Window.Theme
     /// </summary>
     internal sealed class InstallerStyles
     {
-        private const float HoverLift = 0.06f;
-        private const float PressDrop = 0.08f;
+        internal GUIStyle Title { get; private set; }
+
+        internal GUIStyle Description { get; private set; }
+
+        internal GUIStyle SectionHeader { get; private set; }
+
+        internal GUIStyle ColumnHeader { get; private set; }
+
+        internal GUIStyle RowLabel { get; private set; }
+
+        internal GUIStyle Card { get; private set; }
+
+        internal GUIStyle InstalledPill { get; private set; }
+
+        internal GUIStyle NotInstalledPill { get; private set; }
+
+        internal GUIStyle CheckingLabel { get; private set; }
+
+        internal GUIStyle PrimaryButton { get; private set; }
+
+        internal GUIStyle SecondaryButton { get; private set; }
 
         private readonly List<Texture2D> _ownedTextures = new();
 
         private bool _built;
         private bool _builtForProSkin;
-
-        internal GUIStyle Title { get; private set; }
-        internal GUIStyle Description { get; private set; }
-        internal GUIStyle SectionHeader { get; private set; }
-        internal GUIStyle ColumnHeader { get; private set; }
-        internal GUIStyle RowLabel { get; private set; }
-        internal GUIStyle Card { get; private set; }
-        internal GUIStyle InstalledPill { get; private set; }
-        internal GUIStyle NotInstalledPill { get; private set; }
-        internal GUIStyle CheckingLabel { get; private set; }
-        internal GUIStyle PrimaryButton { get; private set; }
-        internal GUIStyle SecondaryButton { get; private set; }
 
         /// <summary>Rebuilds the styles only when needed (first use or a skin change).</summary>
         internal void EnsureBuilt()
@@ -48,12 +54,48 @@ namespace Base.PackageInstaller.Window.Theme
         /// <summary>Destroys the generated textures. Call when the owning window closes.</summary>
         internal void Dispose() => Release();
 
+        private static Color ColorAt(Color color, int x, int y, int size, int radius)
+        {
+            // Distance from the pixel center to the nearest point of the rectangle inset by the
+            // radius. Inside that core the pixel is solid; near a corner it fades over one pixel.
+            float pointX = x + 0.5f;
+            float pointY = y + 0.5f;
+
+            float nearestX = Mathf.Clamp(pointX, radius, size - radius);
+            float nearestY = Mathf.Clamp(pointY, radius, size - radius);
+
+            float distance = Mathf.Sqrt(Square(pointX - nearestX) + Square(pointY - nearestY));
+            float coverage = Mathf.Clamp01(radius + 0.5f - distance);
+
+            return new Color(color.r, color.g, color.b, color.a * coverage);
+        }
+
+        private static Color Shift(Color color, float amount)
+            => new(color.r + amount, color.g + amount, color.b + amount, color.a);
+
+        // Labels inherit hover/active/focused states from the editor skin (white text in the dark
+        // skin), which makes plain text light up like a button. Pin every state to one color.
+        private static void PinTextColor(GUIStyle style, Color color)
+        {
+            style.normal.textColor = color;
+            style.hover.textColor = color;
+            style.active.textColor = color;
+            style.focused.textColor = color;
+        }
+
+        private static float Square(float value) => value * value;
+
+        private static RectOffset Uniform(int value) => new(value, value, value, value);
+
+        private static RectOffset HorizontalPadding(int value) => new(value, value, 0, 0);
+
         private void Build()
         {
             Title = new GUIStyle(EditorStyles.boldLabel)
             {
                 fontSize = InstallerTheme.Metrics.TitleFontSize
             };
+
             PinTextColor(Title, InstallerTheme.Palette.Title);
 
             Description = new GUIStyle(EditorStyles.label)
@@ -61,6 +103,7 @@ namespace Base.PackageInstaller.Window.Theme
                 fontSize = InstallerTheme.Metrics.DescriptionFontSize,
                 wordWrap = true
             };
+
             PinTextColor(Description, InstallerTheme.Palette.Description);
 
             SectionHeader = new GUIStyle(EditorStyles.boldLabel);
@@ -71,6 +114,7 @@ namespace Base.PackageInstaller.Window.Theme
                 alignment = TextAnchor.MiddleLeft,
                 padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
+
             PinTextColor(ColumnHeader, InstallerTheme.Palette.Description);
 
             RowLabel = new GUIStyle(EditorStyles.label)
@@ -78,6 +122,7 @@ namespace Base.PackageInstaller.Window.Theme
                 alignment = TextAnchor.MiddleLeft,
                 padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
+
             PinTextColor(RowLabel, EditorStyles.label.normal.textColor);
 
             Card = RoundedStyle(InstallerTheme.Palette.Card, InstallerTheme.Metrics.CardCornerRadius);
@@ -85,13 +130,15 @@ namespace Base.PackageInstaller.Window.Theme
                 InstallerTheme.Metrics.CardVerticalPadding);
 
             InstalledPill = PillStyle(InstallerTheme.Palette.InstalledPill, InstallerTheme.Palette.InstalledText);
-            NotInstalledPill = PillStyle(InstallerTheme.Palette.NotInstalledPill, InstallerTheme.Palette.NotInstalledText);
+            NotInstalledPill = PillStyle(InstallerTheme.Palette.NotInstalledPill,
+                InstallerTheme.Palette.NotInstalledText);
 
             CheckingLabel = new GUIStyle(EditorStyles.miniLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
                 padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
+
             PinTextColor(CheckingLabel, InstallerTheme.Palette.CheckingText);
 
             PrimaryButton = ButtonStyle(InstallerTheme.Palette.Accent, InstallerTheme.Palette.AccentText,
@@ -110,6 +157,7 @@ namespace Base.PackageInstaller.Window.Theme
             style.fontSize = EditorStyles.miniLabel.fontSize;
             style.padding = new RectOffset(InstallerTheme.Metrics.PillPaddingX, InstallerTheme.Metrics.PillPaddingX,
                 InstallerTheme.Metrics.PillPaddingY, InstallerTheme.Metrics.PillPaddingY);
+
             style.normal.textColor = text;
 
             return style;
@@ -128,8 +176,8 @@ namespace Base.PackageInstaller.Window.Theme
             style.active.textColor = textColor;
             style.focused.textColor = textColor;
 
-            style.hover.background = RoundedTexture(Shift(background, HoverLift), radius);
-            style.active.background = RoundedTexture(Shift(background, -PressDrop), radius);
+            style.hover.background = RoundedTexture(Shift(background, InstallerTheme.Metrics.HoverLift), radius);
+            style.active.background = RoundedTexture(Shift(background, -InstallerTheme.Metrics.PressDrop), radius);
             style.focused.background = style.normal.background;
 
             return style;
@@ -162,13 +210,8 @@ namespace Base.PackageInstaller.Window.Theme
 
             Color[] pixels = new Color[size * size];
 
-            foreach (int index in Indices(pixels.Length))
-            {
-                int x = index % size;
-                int y = index / size;
-
-                pixels[index] = ColorAt(color, x, y, size, radius);
-            }
+            for (int index = 0; index < pixels.Length; index++)
+                pixels[index] = ColorAt(color, index % size, index / size, size, radius);
 
             texture.SetPixels(pixels);
             texture.Apply();
@@ -189,47 +232,5 @@ namespace Base.PackageInstaller.Window.Theme
             _ownedTextures.Clear();
             _built = false;
         }
-
-        private static Color ColorAt(Color color, int x, int y, int size, int radius)
-        {
-            // Distance from the pixel center to the nearest point of the rectangle inset by the
-            // radius. Inside that core the pixel is solid; near a corner it fades over one pixel.
-            float pointX = x + 0.5f;
-            float pointY = y + 0.5f;
-
-            float nearestX = Mathf.Clamp(pointX, radius, size - radius);
-            float nearestY = Mathf.Clamp(pointY, radius, size - radius);
-
-            float distance = Mathf.Sqrt(Square(pointX - nearestX) + Square(pointY - nearestY));
-            float coverage = Mathf.Clamp01(radius + 0.5f - distance);
-
-            return new Color(color.r, color.g, color.b, color.a * coverage);
-        }
-
-        private static IEnumerable<int> Indices(int count)
-        {
-            for (int i = 0; i < count; i++)
-                yield return i;
-        }
-
-        private static Color Shift(Color color, float amount)
-            => new(color.r + amount, color.g + amount, color.b + amount, color.a);
-
-        // Labels inherit hover/active/focused states from the editor skin (white text in the dark
-        // skin), which makes plain text light up like a button. Pin every state to one color.
-        private static void PinTextColor(GUIStyle style, Color color)
-        {
-            style.normal.textColor = color;
-            style.hover.textColor = color;
-            style.active.textColor = color;
-            style.focused.textColor = color;
-        }
-
-        private static float Square(float value) => value * value;
-
-        private static RectOffset Uniform(int value) => new(value, value, value, value);
-
-        private static RectOffset HorizontalPadding(int value) => new(value, value, 0, 0);
     }
 }
-#endif

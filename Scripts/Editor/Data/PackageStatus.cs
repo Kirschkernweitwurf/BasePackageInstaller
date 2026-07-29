@@ -1,22 +1,23 @@
-#if UNITY_EDITOR
 namespace Base.PackageInstaller.Data
 {
     /// <summary>
     /// The current install status of a registry package in the project.
     /// </summary>
-    public readonly struct PackageStatus
+    internal readonly struct PackageStatus
     {
         /// <summary>True if the package is currently installed.</summary>
-        public readonly bool IsInstalled;
+        internal bool IsInstalled { get; }
 
         /// <summary>The installed version, or empty if not installed.</summary>
-        public readonly string Version;
+        internal string Version { get; }
 
-        public PackageStatus(bool isInstalled, string version)
+        /// <summary>Creates a status for a single registry package.</summary>
+        /// <param name="isInstalled">Whether the package is installed.</param>
+        /// <param name="version">The installed version.</param>
+        internal PackageStatus(bool isInstalled, string version)
         {
             IsInstalled = isInstalled;
             Version = version;
         }
     }
 }
-#endif

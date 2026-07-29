@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System.Collections.Generic;
 using Base.PackageInstaller.Data;
 using Base.PackageInstaller.Operations;
@@ -18,39 +17,47 @@ namespace Base.PackageInstaller.Window
     /// present to the latest remote version in a single action. Each package's current
     /// install status and version are shown in a table.
     /// </summary>
-    public sealed class GitPackageManager : EditorWindow
+    internal sealed class GitPackageManager : EditorWindow
     {
+        private const string ClearLabel = "Clear";
+        private const string CreateInputServiceLabel = "Create ProjectInputService";
+        private const string DeselectAllLabel = "Deselect All";
+        private const string Description = "Installs the selected git packages or updates them to the latest remote "
+            + "version if they are already installed.";
+        private const string EditListLabel = "Edit List";
+        private const string InstallLabel = "Install Selected";
+        private const string InstallOrUpdateLabel = "Install / Update Selected";
+
 #if BASE_PACKAGES_DEV
         private const bool IsBasePackageDev = true;
 #else
         private const bool IsBasePackageDev = false;
 #endif
 
-        private const string WindowTitle = "Git Package Manager";
-        private const string Description = "Installs the selected git packages or updates them to the latest remote "
-            + "version if they are already installed.";
+        // The Menu Manager lives in the Tools package, which this window is meant to install in the
+        // first place, so this is the one place a plain MenuItem is used instead of DynamicMenuItem.
+        private const string MenuPath = "Tools/" + WindowTitle;
+        private const int MenuPriority = -15;
 
         private const string PackagesHeader = "Git Packages";
+        private const string ProgressVerb = "Processing";
         private const string ProjectSetupHeader = "Project Setup";
         private const string RefreshLabel = "Refresh";
-        private const string EditListLabel = "Edit List";
-        private const string SelectAllLabel = "Select All";
-        private const string DeselectAllLabel = "Deselect All";
-        private const string CreateInputServiceLabel = "Create ProjectInputService";
         private const string ResultHeader = "Result";
-        private const string ClearLabel = "Clear";
-
-        private const string InstallLabel = "Install Selected";
+        private const string SelectAllLabel = "Select All";
         private const string UpdateLabel = "Update Selected";
-        private const string InstallOrUpdateLabel = "Install / Update Selected";
-        private const string ProgressVerb = "Processing";
 
-        private static readonly GUILayoutOption ActionHeight = GUILayout.Height(InstallerTheme.Metrics.ActionButtonHeight);
+        /// <summary>The window title, also used to label this window on other pages.</summary>
+        internal const string WindowTitle = "Git Package Manager";
+
+        private static readonly GUILayoutOption ActionHeight =
+            GUILayout.Height(InstallerTheme.Metrics.ActionButtonHeight);
         private static readonly GUILayoutOption SecondaryHeight =
             GUILayout.Height(InstallerTheme.Metrics.SecondaryButtonHeight);
         private static readonly GUILayoutOption ToolbarHeight =
             GUILayout.Height(InstallerTheme.Metrics.ToolbarButtonHeight);
-        private static readonly GUILayoutOption RefreshWidth = GUILayout.Width(InstallerTheme.Metrics.RefreshButtonWidth);
+        private static readonly GUILayoutOption RefreshWidth =
+            GUILayout.Width(InstallerTheme.Metrics.RefreshButtonWidth);
         private static readonly GUILayoutOption EditListWidth =
             GUILayout.Width(InstallerTheme.Metrics.EditListButtonWidth);
         private static readonly GUILayoutOption ClearWidth = GUILayout.Width(InstallerTheme.Metrics.ClearButtonWidth);
@@ -109,6 +116,8 @@ namespace Base.PackageInstaller.Window
             DrawStatusFooter();
         }
 
+        private void OnFocus() => RefreshStatuses();
+
         private void OnDisable()
         {
             _operation.OnPackageStarted -= HandlePackageStarted;
@@ -119,12 +128,13 @@ namespace Base.PackageInstaller.Window
 
             _styles.Dispose();
         }
-
-        private void OnFocus() => RefreshStatuses();
 #endregion
 
-        [MenuItem("Tools/Git Package Manager", priority = -15)]
-        public static void ShowWindow() => GetWindow<GitPackageManager>(WindowTitle);
+        [MenuItem(MenuPath, priority = MenuPriority)]
+        private static void ShowWindow() => GetWindow<GitPackageManager>(WindowTitle);
+
+        private static void HandlePackageCompleted(PackageResult result)
+            => Debug.Log($"{WindowTitle}: {OperationSummaryFormatter.Describe(result)}");
 
         private void DrawHeader()
         {
@@ -226,70 +236,22 @@ namespace Base.PackageInstaller.Window
             EditorGUILayout.HelpBox(_status, GetStatusMessageType());
         }
 
-        private void ClearStatus()
+        private MessageType GetStatusMessageType()
         {
-            _status = null;
-            _hasFailures = false;
+            if (_operation.IsRunning)
+                return MessageType.Info;
 
-            Repaint();
+            return _hasFailures
+                ? MessageType.Warning
+                : MessageType.None;
         }
 
-        private void RefreshPackages()
+        private string GetActionLabel() => ResolveAction() switch
         {
-            _packages = BasePackageRegistry.instance.SortedPackages;
-            _normalizedUrls = new string[_packages.Length];
-            _selected = new bool[_packages.Length];
-            _rowStatuses = new PackageStatus[_packages.Length];
-
-            for (int i = 0; i < _packages.Length; i++)
-            {
-                _normalizedUrls[i] = PackageStatusChecker.Normalize(_packages[i].Url);
-                _selected[i] = true;
-            }
-
-            FillRowStatuses();
-        }
-
-        // Snapshots the current statuses into a per-row array so drawing does not do a dictionary
-        // lookup for every package on every repaint.
-        private void FillRowStatuses()
-        {
-            for (int i = 0; i < _packages.Length; i++)
-                _rowStatuses[i] = _statuses.GetValueOrDefault(_normalizedUrls[i]);
-        }
-
-        private void RefreshStatuses()
-        {
-            if (_checker == null || _checker.IsRunning)
-                return;
-
-            if (_operation is
-                {
-                    IsRunning: true
-                })
-                return;
-
-            _checker.Refresh();
-        }
-
-        // Pulls in any new or changed BasePackageDefaults, then re-checks install statuses.
-        private void RefreshAll()
-        {
-            if (BasePackageRegistry.instance.SyncWithDefaults())
-                RefreshPackages();
-
-            RefreshStatuses();
-        }
-
-        private string GetActionLabel()
-        {
-            return ResolveAction() switch
-            {
-                EInstallAction.Install => InstallLabel,
-                EInstallAction.Update => UpdateLabel,
-                _ => InstallOrUpdateLabel
-            };
-        }
+            EInstallAction.Install => InstallLabel,
+            EInstallAction.Update => UpdateLabel,
+            _ => InstallOrUpdateLabel
+        };
 
         private EInstallAction ResolveAction()
         {
@@ -319,6 +281,14 @@ namespace Base.PackageInstaller.Window
             return EInstallAction.InstallOrUpdate;
         }
 
+        private void ClearStatus()
+        {
+            _status = null;
+            _hasFailures = false;
+
+            Repaint();
+        }
+
         private void SetAllSelected(bool value)
         {
             for (int i = 0; i < _selected.Length; i++)
@@ -341,14 +311,51 @@ namespace Base.PackageInstaller.Window
             _operation.Run(urls);
         }
 
-        private MessageType GetStatusMessageType()
+        // Pulls in any new or changed BasePackageDefaults, then re-checks install statuses.
+        private void RefreshAll()
         {
-            if (_operation.IsRunning)
-                return MessageType.Info;
+            if (BasePackageRegistry.instance.SyncWithDefaults())
+                RefreshPackages();
 
-            return _hasFailures
-                ? MessageType.Warning
-                : MessageType.None;
+            RefreshStatuses();
+        }
+
+        private void RefreshPackages()
+        {
+            _packages = BasePackageRegistry.instance.SortedPackages;
+            _normalizedUrls = new string[_packages.Length];
+            _selected = new bool[_packages.Length];
+            _rowStatuses = new PackageStatus[_packages.Length];
+
+            for (int i = 0; i < _packages.Length; i++)
+            {
+                _normalizedUrls[i] = PackageStatusChecker.Normalize(_packages[i].Url);
+                _selected[i] = true;
+            }
+
+            FillRowStatuses();
+        }
+
+        private void RefreshStatuses()
+        {
+            if (_checker == null || _checker.IsRunning)
+                return;
+
+            if (_operation is
+                {
+                    IsRunning: true
+                })
+                return;
+
+            _checker.Refresh();
+        }
+
+        // Snapshots the current statuses into a per-row array so drawing does not do a dictionary
+        // lookup for every package on every repaint.
+        private void FillRowStatuses()
+        {
+            for (int i = 0; i < _packages.Length; i++)
+                _rowStatuses[i] = _statuses.GetValueOrDefault(_normalizedUrls[i]);
         }
 
         private void HandleStatusesReady(IReadOnlyDictionary<string, PackageStatus> statuses)
@@ -365,9 +372,6 @@ namespace Base.PackageInstaller.Window
             _status = $"{ProgressVerb}: {label}...";
             Repaint();
         }
-
-        private static void HandlePackageCompleted(PackageResult result)
-            => Debug.Log($"{WindowTitle}: {OperationSummaryFormatter.Describe(result)}");
 
         private void HandlePackageFailed(PackageResult result)
         {
@@ -391,4 +395,3 @@ namespace Base.PackageInstaller.Window
         }
     }
 }
-#endif

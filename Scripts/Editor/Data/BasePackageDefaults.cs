@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 namespace Base.PackageInstaller.Data
 {
     /// <summary>
@@ -8,25 +7,24 @@ namespace Base.PackageInstaller.Data
     internal static class BasePackageDefaults
     {
         private const string BaseUrl =
-            "https://github.com/JonathanAlber/BaseProjectPackages.git?path=BaseProject/Packages/";
+            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
 
         /// <summary>
         /// Creates a fresh copy of the default entries.
         /// </summary>
         /// <returns>The default package entries.</returns>
-        public static PackageEntry[] Create() => new[]
+        internal static PackageEntry[] Create() => new[]
         {
-            new PackageEntry("Tools", $"{BaseUrl}Tools"),
             new PackageEntry("Attributes", $"{BaseUrl}Attributes"),
+            new PackageEntry("Controller Support", $"{BaseUrl}ControllerSupport"),
             new PackageEntry("Core", $"{BaseUrl}Core"),
-            new PackageEntry("UI", $"{BaseUrl}UI"),
-            new PackageEntry("Utility", $"{BaseUrl}Utility"),
-            new PackageEntry("Save System", $"{BaseUrl}SaveSystem"),
-            new PackageEntry("Settings System", $"{BaseUrl}Settings"),
             new PackageEntry("Localization", $"{BaseUrl}Localization"),
             new PackageEntry("Memory Profiler", $"{BaseUrl}MemoryProfiler"),
-            new PackageEntry("Controller Support", $"{BaseUrl}ControllerSupport")
+            new PackageEntry("Save System", $"{BaseUrl}SaveSystem"),
+            new PackageEntry("Settings System", $"{BaseUrl}Settings"),
+            new PackageEntry("Tools", $"{BaseUrl}Tools"),
+            new PackageEntry("UI", $"{BaseUrl}UI"),
+            new PackageEntry("Utility", $"{BaseUrl}Utility")
         };
     }
 }
-#endif

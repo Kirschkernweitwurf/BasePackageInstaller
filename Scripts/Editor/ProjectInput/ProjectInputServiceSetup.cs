@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -9,41 +8,50 @@ namespace Base.PackageInstaller.ProjectInput
     /// Sets up the project's input service: configures the input action asset
     /// and writes <c>ProjectInputService.cs</c> into the project.
     /// </summary>
-    public static class ProjectInputServiceSetup
+    internal static class ProjectInputServiceSetup
     {
+        private const string AssetExtension = ".inputactions";
         private const string AssetFolder = "Assets/Input";
         private const string AssetName = "PlayerInputActions";
         private const string AssetsPrefix = "Assets/";
+        private const char FolderSeparator = '/';
+        private const char NamespaceSeparator = '.';
         private const string ServiceFileName = "ProjectInputService.cs";
-
         private const string ServiceFolder = "Assets/Generated/Input";
 
-        public static bool IsSetUp => File.Exists(AssetPath) && File.Exists(ServicePath);
+        /// <summary>True once both the input action asset and the service file exist.</summary>
+        internal static bool IsSetUp => File.Exists(AssetPath) && File.Exists(ServicePath);
 
+        private static readonly string AssetPath = $"{AssetFolder}/{AssetName}{AssetExtension}";
         private static readonly string ServicePath = $"{ServiceFolder}/{ServiceFileName}";
-        private static readonly string AssetPath = $"{AssetFolder}/{AssetName}.inputactions";
 
-        public static void Run()
+        /// <summary>
+        /// Creates the input action asset and the project input service if they are missing.
+        /// Existing files are left untouched.
+        /// </summary>
+        internal static void Run()
         {
             EnsureFolder(AssetFolder);
             EnsureFolder(ServiceFolder);
 
-            string assetNamespace = FolderToNamespace(AssetFolder);
+            string inputNamespace = FolderToNamespace(AssetFolder);
             string serviceNamespace = FolderToNamespace(ServiceFolder);
 
-            if (!InputActionAssetSetup.TryEnsureAssetAtPath(AssetPath, assetNamespace))
+            if (!InputActionAssetSetup.TryEnsureAssetAtPath(AssetPath, inputNamespace))
                 return;
 
             if (!File.Exists(ServicePath))
-                WriteServiceFile(serviceNamespace);
+                WriteServiceFile(serviceNamespace, inputNamespace);
 
             AssetDatabase.Refresh();
-            Debug.Log("ProjectInputService setup complete.");
+
+            Debug.Log($"{Path.GetFileNameWithoutExtension(ServiceFileName)} setup complete.");
         }
 
-        private static void WriteServiceFile(string serviceNamespace)
+        private static void WriteServiceFile(string serviceNamespace, string inputNamespace)
         {
-            string code = ProjectInputServiceCodeTemplate.Render(serviceNamespace);
+            string code = ProjectInputServiceCodeTemplate.Render(serviceNamespace, inputNamespace);
+
             File.WriteAllText(ServicePath, code);
             AssetDatabase.ImportAsset(ServicePath);
         }
@@ -53,9 +61,7 @@ namespace Base.PackageInstaller.ProjectInput
             if (folder.StartsWith(AssetsPrefix))
                 folder = folder[AssetsPrefix.Length..];
 
-            string ns = folder.Replace('/', '.');
-
-            return ns;
+            return folder.Replace(FolderSeparator, NamespaceSeparator);
         }
 
         private static void EnsureFolder(string path)
@@ -63,12 +69,12 @@ namespace Base.PackageInstaller.ProjectInput
             if (AssetDatabase.IsValidFolder(path))
                 return;
 
-            string[] parts = path.Split('/');
+            string[] parts = path.Split(FolderSeparator);
             string current = parts[0];
 
             for (int i = 1; i < parts.Length; i++)
             {
-                string next = $"{current}/{parts[i]}";
+                string next = $"{current}{FolderSeparator}{parts[i]}";
 
                 if (!AssetDatabase.IsValidFolder(next))
                     AssetDatabase.CreateFolder(current, parts[i]);
@@ -78,4 +84,3 @@ namespace Base.PackageInstaller.ProjectInput
         }
     }
 }
-#endif

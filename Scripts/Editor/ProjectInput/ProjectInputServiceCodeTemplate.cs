@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 namespace Base.PackageInstaller.ProjectInput
 {
     /// <summary>
@@ -6,15 +5,16 @@ namespace Base.PackageInstaller.ProjectInput
     /// </summary>
     internal static class ProjectInputServiceCodeTemplate
     {
-        private const string NamespaceToken = "__NAMESPACE__";
+        private const string InputNamespaceToken = "__INPUT_NAMESPACE__";
+        private const string ServiceNamespaceToken = "__SERVICE_NAMESPACE__";
 
         private const string Template = @"using System.Collections.Generic;
 using Base.AttributePackage;
 using Base.CorePackage.Services;
-using Input;
+using __INPUT_NAMESPACE__;
 using UnityEngine.InputSystem;
 
-namespace Generated.Input
+namespace __SERVICE_NAMESPACE__
 {
     /// <summary>
     /// Project-specific input service. Owns the generated <see cref=""PlayerInputActions""/>
@@ -49,6 +49,7 @@ namespace Generated.Input
         /// Enables the given map. Reference counted, so it stays enabled until every caller
         /// that enabled it has disabled it again.
         /// </summary>
+        /// <param name=""map"">The map to enable.</param>
         public void EnableMap(InputActionMap map)
         {
             if (map == null)
@@ -65,6 +66,7 @@ namespace Generated.Input
         /// Releases the given map. Only actually disables it once every caller that enabled
         /// it has released it again.
         /// </summary>
+        /// <param name=""map"">The map to release.</param>
         public void DisableMap(InputActionMap map)
         {
             if (map == null || !_enabledMapCounts.TryGetValue(map, out int count))
@@ -83,34 +85,38 @@ namespace Generated.Input
         }
 
         /// <summary>
-        /// Resolves a map against the package's runtime actions clone, so callers enable the
-        /// exact instance they subscribe to via <see cref=""BaseInputActions""/>.
-        /// </summary>
-
-        // ReSharper disable once MemberCanBePrivate.Global
-        public InputActionMap ResolveBaseMap(InputActionMapReference reference)
-            => Actions.asset.FindActionMap(reference.MapId);
-
-        /// <summary>
         /// Tries to resolve a map against the package's runtime actions clone, so callers enable the
         /// exact instance they subscribe to via <see cref=""BaseInputActions""/>.
         /// </summary>
-        /// <returns><c>>true</c> if the reference was valid and the map was resolved; otherwise, <c>false</c>.</returns>
+        /// <param name=""reference"">The reference to resolve.</param>
+        /// <param name=""map"">The resolved map, or null if the reference did not match.</param>
+        /// <returns><c>true</c> if the reference was valid and the map was resolved; otherwise, <c>false</c>.</returns>
         public bool TryResolveBaseMap(InputActionMapReference reference, out InputActionMap map)
         {
             map = ResolveBaseMap(reference);
+
             return map != null;
         }
+
+        /// <summary>
+        /// Resolves a map against the package's runtime actions clone, so callers enable the
+        /// exact instance they subscribe to via <see cref=""BaseInputActions""/>.
+        /// </summary>
+        /// <param name=""reference"">The reference to resolve.</param>
+        /// <returns>The resolved map, or null if the reference did not match.</returns>
+        private InputActionMap ResolveBaseMap(InputActionMapReference reference)
+            => Actions.asset.FindActionMap(reference.MapId);
     }
 }";
 
         /// <summary>
-        /// Renders the template, replacing tokens with the provided namespaces.
+        /// Renders the template, replacing the tokens with the provided namespaces.
         /// </summary>
         /// <param name="serviceNamespace">The namespace for the generated service class.</param>
+        /// <param name="inputNamespace">The namespace of the generated input actions class.</param>
         /// <returns>The rendered code.</returns>
-        public static string Render(string serviceNamespace) => Template
-            .Replace(NamespaceToken, serviceNamespace);
+        internal static string Render(string serviceNamespace, string inputNamespace) => Template
+            .Replace(ServiceNamespaceToken, serviceNamespace)
+            .Replace(InputNamespaceToken, inputNamespace);
     }
 }
-#endif

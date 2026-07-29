@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -7,21 +6,24 @@ using UnityEngine;
 namespace Base.PackageInstaller.Data
 {
     /// <summary>
-    /// Editor-only registry of base packages, persisted per project in
+    /// Registry of base packages, persisted per project in
     /// <c>ProjectSettings/BasePackageRegistry.asset</c> so it can be version controlled.
     /// <para>
     /// Seeded with <see cref="BasePackageDefaults"/> on first creation; consumers can then
-    /// add, remove or edit entries via Project Settings → "Base Packages".
+    /// add, remove or edit entries via the Git Packages page in the project settings.
     /// </para>
     /// </summary>
     [FilePath("ProjectSettings/BasePackageRegistry.asset", FilePathAttribute.Location.ProjectFolder)]
-    public sealed class BasePackageRegistry : ScriptableSingleton<BasePackageRegistry>
+    internal sealed class BasePackageRegistry : ScriptableSingleton<BasePackageRegistry>
     {
+        /// <summary>The serialized name of the package list, for the settings provider to bind against.</summary>
+        internal const string PackagesPropertyName = nameof(packages);
+
         [SerializeField] private bool seeded;
         [SerializeField] private List<PackageEntry> packages = new();
 
         /// <summary>The registered packages sorted alphabetically by name.</summary>
-        public PackageEntry[] SortedPackages
+        internal PackageEntry[] SortedPackages
         {
             get
             {
@@ -36,7 +38,7 @@ namespace Base.PackageInstaller.Data
         }
 
         /// <summary>Writes the registry back to disk after edits.</summary>
-        public void Persist() => Save(true);
+        internal void Persist() => Save(true);
 
         /// <summary>
         /// Re-applies <see cref="BasePackageDefaults"/> onto the registry so newly added or
@@ -44,7 +46,7 @@ namespace Base.PackageInstaller.Data
         /// name: adds any missing default and updates the URL of an existing default that changed.
         /// </summary>
         /// <returns><c>true</c> when the registry changed and was saved.</returns>
-        public bool SyncWithDefaults()
+        internal bool SyncWithDefaults()
         {
             EnsureSeeded();
 
@@ -87,4 +89,3 @@ namespace Base.PackageInstaller.Data
         }
     }
 }
-#endif
