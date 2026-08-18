@@ -16,6 +16,10 @@ namespace Base.PackageInstaller.Window
     /// dependencies, installing any that are missing and updating any that are already
     /// present to the latest remote version in a single action. Each package's current
     /// install status and version are shown in a table.
+    /// <para>
+    /// Selecting a package also selects what it depends on, and a run processes the
+    /// selection dependencies first, so the project compiles at every step.
+    /// </para>
     /// </summary>
     internal sealed class GitPackageManager : EditorWindow
     {
@@ -23,7 +27,8 @@ namespace Base.PackageInstaller.Window
         private const string CreateInputServiceLabel = "Create ProjectInputService";
         private const string DeselectAllLabel = "Deselect All";
         private const string Description = "Installs the selected git packages or updates them to the latest remote "
-            + "version if they are already installed.";
+            + "version if they are already installed. Packages a selection depends on are added to it "
+            + "automatically and are installed first.";
         private const string EditListLabel = "Edit List";
         private const string InstallLabel = "Install Selected";
         private const string InstallOrUpdateLabel = "Install / Update Selected";
@@ -149,6 +154,11 @@ namespace Base.PackageInstaller.Window
             EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
 
             _table.Draw(_packages, _selected, _rowStatuses, _statusChecked, ref _scroll);
+
+            // A package is never left selected without what it needs, so ticking one row can tick
+            // others. Applied every frame rather than on change, so an edited registry cannot leave
+            // an incomplete selection behind either.
+            PackageDependencyResolver.ExpandSelection(_packages, _selected);
 
             EditorGUILayout.Space(InstallerTheme.Metrics.ItemSpacing);
             DrawSelectionButtons();
@@ -297,13 +307,9 @@ namespace Base.PackageInstaller.Window
 
         private void StartOperation()
         {
-            List<string> urls = new();
+            PackageDependencyResolver.ExpandSelection(_packages, _selected);
 
-            for (int i = 0; i < _packages.Length; i++)
-            {
-                if (_selected[i])
-                    urls.Add(_packages[i].Url);
-            }
+            List<string> urls = PackageDependencyResolver.ResolveOrder(_packages, _selected);
 
             _status = null;
             _hasFailures = false;
