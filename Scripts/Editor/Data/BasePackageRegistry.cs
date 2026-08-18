@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -43,7 +44,8 @@ namespace Base.PackageInstaller.Data
         /// <summary>
         /// Re-applies <see cref="BasePackageDefaults"/> onto the registry so newly added or
         /// changed defaults appear without discarding project-specific entries. Matches by
-        /// name: adds any missing default and updates the URL of an existing default that changed.
+        /// name: adds any missing default and replaces an existing default whose URL or
+        /// dependencies changed.
         /// </summary>
         /// <returns><c>true</c> when the registry changed and was saved.</returns>
         internal bool SyncWithDefaults()
@@ -63,7 +65,7 @@ namespace Base.PackageInstaller.Data
                     continue;
                 }
 
-                if (packages[index].Url == defaultEntry.Url)
+                if (Matches(packages[index], defaultEntry))
                     continue;
 
                 packages[index] = defaultEntry;
@@ -75,6 +77,10 @@ namespace Base.PackageInstaller.Data
 
             return changed;
         }
+
+        private static bool Matches(PackageEntry current, PackageEntry defaultEntry)
+            => current.Url == defaultEntry.Url
+                && current.DependsOn.SequenceEqual(defaultEntry.DependsOn);
 
         private void EnsureSeeded()
         {

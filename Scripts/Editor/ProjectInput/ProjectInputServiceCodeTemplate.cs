@@ -9,8 +9,8 @@ namespace Base.PackageInstaller.ProjectInput
         private const string ServiceNamespaceToken = "__SERVICE_NAMESPACE__";
 
         private const string Template = @"using System.Collections.Generic;
-using Base.AttributePackage;
-using Base.CorePackage.Services;
+using Base.CorePackage.Input;
+using Base.ServicePackage;
 using __INPUT_NAMESPACE__;
 using UnityEngine.InputSystem;
 
