@@ -64,16 +64,19 @@ The default registry contains the following:
 
 | Package | Description |
 |---|---|
-| `Tools` | General-purpose editor tools |
 | `Attributes` | Custom attributes for the inspector and more |
-| `Core` | Core systems (ServiceLocator, GameActions, Tweening, etc.) |
-| `UI` | UI helpers and menu management |
-| `Utility` | Common utilities |
-| `Save System` | Saving and loading game data |
-| `Settings System` | Game settings management |
+| `Controller Support` | Gamepad navigation and input glyphs |
+| `Core` | Core systems (menus, audio, scene loading, timers) |
+| `Editor UI` | Shared styling and widgets for editor tooling |
 | `Localization` | Localization support |
 | `Memory Profiler` | Memory profiling tools |
-| `Controller Support` | Gamepad navigation and input glyphs |
+| `Save System` | Saving and loading game data |
+| `Services` | Service locator and service lifecycle |
+| `Settings System` | Game settings management |
+| `Tools` | General-purpose editor tools |
+| `Tweening` | Tweening and easing helpers |
+| `UI` | UI helpers and menu management |
+| `Utility` | Common utilities |
 
 All of these live in the [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages) repo.
 
