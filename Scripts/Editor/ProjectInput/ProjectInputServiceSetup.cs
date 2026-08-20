@@ -11,6 +11,9 @@ namespace Base.PackageInstaller.ProjectInput
     internal static class ProjectInputServiceSetup
     {
         private const string AssetExtension = ".inputactions";
+
+        // The template declares the namespaces these two folders resolve to, so changing either
+        // folder means the template has to be updated with it.
         private const string AssetFolder = "Assets/Input";
         private const string AssetName = "PlayerInputActions";
         private const string AssetsPrefix = "Assets/";
@@ -35,25 +38,28 @@ namespace Base.PackageInstaller.ProjectInput
             EnsureFolder(ServiceFolder);
 
             string inputNamespace = FolderToNamespace(AssetFolder);
-            string serviceNamespace = FolderToNamespace(ServiceFolder);
 
             if (!InputActionAssetSetup.TryEnsureAssetAtPath(AssetPath, inputNamespace))
                 return;
 
-            if (!File.Exists(ServicePath))
-                WriteServiceFile(serviceNamespace, inputNamespace);
+            if (!File.Exists(ServicePath)
+                && !TryWriteServiceFile())
+                return;
 
             AssetDatabase.Refresh();
 
             Debug.Log($"{Path.GetFileNameWithoutExtension(ServiceFileName)} setup complete.");
         }
 
-        private static void WriteServiceFile(string serviceNamespace, string inputNamespace)
+        private static bool TryWriteServiceFile()
         {
-            string code = ProjectInputServiceCodeTemplate.Render(serviceNamespace, inputNamespace);
+            if (!ProjectInputServiceCodeTemplate.TryLoad(out string code))
+                return false;
 
             File.WriteAllText(ServicePath, code);
             AssetDatabase.ImportAsset(ServicePath);
+
+            return true;
         }
 
         private static string FolderToNamespace(string folder)

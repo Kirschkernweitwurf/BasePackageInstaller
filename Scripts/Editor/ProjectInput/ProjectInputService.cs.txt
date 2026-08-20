@@ -1,0 +1,37 @@
+using Base.CorePackage.Input;
+using Input;
+using UnityEngine.InputSystem;
+
+namespace Generated.Input
+{
+    /// <summary>
+    /// Project-specific input service. Owns the generated <see cref="PlayerInputActions"/>
+    /// instance and exposes it through <see cref="Actions"/>. Everything else is inherited.
+    /// </summary>
+    public class ProjectInputService : ProjectInputServiceBase
+    {
+        /// <summary>
+        /// The instance of the generated project specific input actions class.
+        /// </summary>
+        public PlayerInputActions Actions { get; private set; }
+
+        /// <inheritdoc/>
+        protected override InputActionAsset RuntimeAsset => Actions.asset;
+
+#region Unity Callbacks
+        protected override void Awake()
+        {
+            base.Awake();
+
+            Actions = new PlayerInputActions();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+
+            Actions?.Dispose();
+        }
+#endregion
+    }
+}

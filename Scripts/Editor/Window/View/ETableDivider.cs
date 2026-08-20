@@ -8,10 +8,13 @@ namespace Base.PackageInstaller.Window.View
         /// <summary>No divider is currently being dragged.</summary>
         None = 0,
 
-        /// <summary>The divider between the Package and Status columns.</summary>
-        NameStatus = 1,
+        /// <summary>The divider between the Package and Required By columns.</summary>
+        NameRequired = 1,
+
+        /// <summary>The divider between the Required By and Status columns.</summary>
+        RequiredStatus = 2,
 
         /// <summary>The divider between the Status and Version columns.</summary>
-        StatusVersion = 2
+        StatusVersion = 3
     }
 }

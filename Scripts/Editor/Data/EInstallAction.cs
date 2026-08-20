@@ -12,7 +12,10 @@ namespace Base.PackageInstaller.Data
         /// <summary>Every selected package is missing.</summary>
         Install = 1,
 
+        /// <summary>Nothing is selected, so there is nothing for the button to do.</summary>
+        Nothing = 2,
+
         /// <summary>Every selected package is already installed.</summary>
-        Update = 2
+        Update = 3
     }
 }

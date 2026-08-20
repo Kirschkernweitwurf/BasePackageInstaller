@@ -21,6 +21,10 @@ namespace Base.PackageInstaller.Window.Theme
 
         internal GUIStyle RowLabel { get; private set; }
 
+        internal GUIStyle RequiredLabel { get; private set; }
+
+        internal GUIStyle RequiredColumnLabel { get; private set; }
+
         internal GUIStyle Card { get; private set; }
 
         internal GUIStyle InstalledPill { get; private set; }
@@ -124,6 +128,22 @@ namespace Base.PackageInstaller.Window.Theme
             };
 
             PinTextColor(RowLabel, EditorStyles.label.normal.textColor);
+
+            // A package another one depends on: same row, dimmed, so the locked toggle next to it
+            // reads as deliberate rather than broken.
+            RequiredLabel = new GUIStyle(RowLabel);
+            PinTextColor(RequiredLabel, InstallerTheme.Palette.Description);
+
+            // The list of holders is secondary information and can be long, so it is drawn smaller
+            // and clipped with an ellipsis instead of pushing the other columns around.
+            RequiredColumnLabel = new GUIStyle(EditorStyles.miniLabel)
+            {
+                alignment = TextAnchor.MiddleLeft,
+                clipping = TextClipping.Ellipsis,
+                padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
+            };
+
+            PinTextColor(RequiredColumnLabel, InstallerTheme.Palette.Description);
 
             Card = RoundedStyle(InstallerTheme.Palette.Card, InstallerTheme.Metrics.CardCornerRadius);
             Card.padding = new RectOffset(0, 0, InstallerTheme.Metrics.CardVerticalPadding,
