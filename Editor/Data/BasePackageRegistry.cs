@@ -78,9 +78,8 @@ namespace Base.PackageInstaller.Data
             return changed;
         }
 
-        private static bool Matches(PackageEntry current, PackageEntry defaultEntry)
-            => current.Url == defaultEntry.Url
-                && current.DependsOn.SequenceEqual(defaultEntry.DependsOn);
+        private static bool Matches(PackageEntry current, PackageEntry defaultEntry) => current.Url == defaultEntry.Url
+            && current.DependsOn.SequenceEqual(defaultEntry.DependsOn);
 
         private void EnsureSeeded()
         {
