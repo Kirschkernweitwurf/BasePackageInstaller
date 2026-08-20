@@ -8,6 +8,7 @@ namespace Base.PackageInstaller.Data
     internal static class BasePackageDefaults
     {
         private const string Attributes = "Attributes";
+        private const string Content = "Content";
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
         private const string EditorUi = "Editor UI";
@@ -31,6 +32,7 @@ namespace Base.PackageInstaller.Data
         internal static PackageEntry[] Create() => new[]
         {
             new PackageEntry(Attributes, $"{BaseUrl}Attributes", EditorUi, Utility),
+            new PackageEntry(Content, $"{BaseUrl}Content", ControllerSupport, SaveSystem, Settings, UI),
             new PackageEntry(ControllerSupport, $"{BaseUrl}ControllerSupport", Core),
             new PackageEntry(Core, $"{BaseUrl}Core", Tweening),
             new PackageEntry(EditorUi, $"{BaseUrl}EditorUi"),
