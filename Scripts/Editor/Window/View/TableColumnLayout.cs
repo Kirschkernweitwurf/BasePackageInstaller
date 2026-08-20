@@ -6,21 +6,25 @@ namespace Base.PackageInstaller.Window.View
 {
     /// <summary>
     /// Owns the table's column widths and the draggable dividers between them. The selection
-    /// column is fixed; Name and Status are user-resizable and persisted in EditorPrefs; Version
-    /// takes the remaining width. Given a row rectangle it hands back one rectangle per column, so
-    /// the header and every row share the exact same x positions and stay perfectly aligned.
+    /// column is fixed; Name, Required By and Status are user-resizable and persisted in
+    /// EditorPrefs; Version takes the remaining width. Given a row rectangle it hands back one
+    /// rectangle per column, so the header and every row share the exact same x positions and stay
+    /// perfectly aligned.
     /// </summary>
     internal sealed class TableColumnLayout
     {
         private const string NameWidthKey = "Base.PackageInstaller.Columns.NameWidth";
+        private const string RequiredWidthKey = "Base.PackageInstaller.Columns.RequiredWidth";
         private const string StatusWidthKey = "Base.PackageInstaller.Columns.StatusWidth";
 
         // The widths the user dragged to, persisted between sessions.
         private float _savedNameWidth;
+        private float _savedRequiredWidth;
         private float _savedStatusWidth;
 
         // The widths actually drawn this frame, clamped to the available space.
         private float _nameWidth;
+        private float _requiredWidth;
         private float _statusWidth;
         private float _versionWidth;
 
@@ -30,6 +34,8 @@ namespace Base.PackageInstaller.Window.View
         internal TableColumnLayout()
         {
             _savedNameWidth = EditorPrefs.GetFloat(NameWidthKey, InstallerTheme.Metrics.DefaultNameColumnWidth);
+            _savedRequiredWidth = EditorPrefs.GetFloat(RequiredWidthKey,
+                InstallerTheme.Metrics.DefaultRequiredColumnWidth);
             _savedStatusWidth = EditorPrefs.GetFloat(StatusWidthKey, InstallerTheme.Metrics.DefaultStatusColumnWidth);
         }
 
@@ -40,22 +46,22 @@ namespace Base.PackageInstaller.Window.View
             float flexible = availableWidth - InstallerTheme.Metrics.SelectionColumnWidth;
 
             _nameWidth = Mathf.Max(_savedNameWidth, InstallerTheme.Metrics.MinNameColumnWidth);
+            _requiredWidth = Mathf.Max(_savedRequiredWidth, InstallerTheme.Metrics.MinRequiredColumnWidth);
             _statusWidth = Mathf.Max(_savedStatusWidth, InstallerTheme.Metrics.MinStatusColumnWidth);
-            _versionWidth = flexible - _nameWidth - _statusWidth;
+            _versionWidth = flexible - _nameWidth - _requiredWidth - _statusWidth;
 
             if (_versionWidth >= InstallerTheme.Metrics.MinVersionColumnWidth)
                 return;
 
-            // Not enough room for Version: reclaim space from Status first, then Name.
+            // Not enough room for Version: reclaim from Required By first, then Status, then Name.
             float deficit = InstallerTheme.Metrics.MinVersionColumnWidth - _versionWidth;
 
-            float fromStatus = Mathf.Min(deficit, _statusWidth - InstallerTheme.Metrics.MinStatusColumnWidth);
-            _statusWidth -= fromStatus;
-            deficit -= fromStatus;
+            deficit -= Reclaim(ref _requiredWidth, InstallerTheme.Metrics.MinRequiredColumnWidth, deficit);
+            deficit -= Reclaim(ref _statusWidth, InstallerTheme.Metrics.MinStatusColumnWidth, deficit);
 
             _nameWidth = Mathf.Max(InstallerTheme.Metrics.MinNameColumnWidth, _nameWidth - deficit);
             _versionWidth = Mathf.Max(InstallerTheme.Metrics.MinVersionColumnWidth,
-                flexible - _nameWidth - _statusWidth);
+                flexible - _nameWidth - _requiredWidth - _statusWidth);
         }
 
         /// <summary>The cell holding the selection toggle.</summary>
@@ -70,10 +76,15 @@ namespace Base.PackageInstaller.Window.View
         internal Rect NameRect(Rect area) => new(area.x + InstallerTheme.Metrics.SelectionColumnWidth, area.y,
             _nameWidth, area.height);
 
+        /// <summary>The cell listing the selected packages that depend on this one.</summary>
+        /// <param name="area">The row area the columns are laid out in.</param>
+        /// <returns>The required by cell rectangle.</returns>
+        internal Rect RequiredRect(Rect area) => new(NameRect(area).xMax, area.y, _requiredWidth, area.height);
+
         /// <summary>The cell holding the status pill.</summary>
         /// <param name="area">The row area the columns are laid out in.</param>
         /// <returns>The status cell rectangle.</returns>
-        internal Rect StatusRect(Rect area) => new(NameRect(area).xMax, area.y, _statusWidth, area.height);
+        internal Rect StatusRect(Rect area) => new(RequiredRect(area).xMax, area.y, _statusWidth, area.height);
 
         /// <summary>The cell holding the installed version.</summary>
         /// <param name="area">The row area the columns are laid out in.</param>
@@ -84,8 +95,25 @@ namespace Base.PackageInstaller.Window.View
         /// <param name="area">The full table area the dividers span.</param>
         internal void DrawAndProcessDividers(Rect area)
         {
-            HandleDivider(ETableDivider.NameStatus, NameRect(area).xMax, area);
+            HandleDivider(ETableDivider.NameRequired, NameRect(area).xMax, area);
+            HandleDivider(ETableDivider.RequiredStatus, RequiredRect(area).xMax, area);
             HandleDivider(ETableDivider.StatusVersion, StatusRect(area).xMax, area);
+        }
+
+        // Takes as much of the deficit out of one column as its minimum allows.
+        private static float Reclaim(ref float width, float minimum, float deficit)
+        {
+            if (deficit <= 0f)
+                return 0f;
+
+            float available = Mathf.Min(deficit, width - minimum);
+
+            if (available <= 0f)
+                return 0f;
+
+            width -= available;
+
+            return available;
         }
 
         private void HandleDivider(ETableDivider divider, float x, Rect area)
@@ -130,20 +158,31 @@ namespace Base.PackageInstaller.Window.View
 
         private void Resize(ETableDivider divider, float mouseX, Rect area)
         {
-            if (divider == ETableDivider.NameStatus)
+            float start = area.x + InstallerTheme.Metrics.SelectionColumnWidth;
+
+            if (divider == ETableDivider.NameRequired)
             {
-                float nameStart = area.x + InstallerTheme.Metrics.SelectionColumnWidth;
-                _savedNameWidth = Mathf.Max(InstallerTheme.Metrics.MinNameColumnWidth, mouseX - nameStart);
+                _savedNameWidth = Mathf.Max(InstallerTheme.Metrics.MinNameColumnWidth, mouseX - start);
                 return;
             }
 
-            float statusStart = area.x + InstallerTheme.Metrics.SelectionColumnWidth + _nameWidth;
-            _savedStatusWidth = Mathf.Max(InstallerTheme.Metrics.MinStatusColumnWidth, mouseX - statusStart);
+            start += _nameWidth;
+
+            if (divider == ETableDivider.RequiredStatus)
+            {
+                _savedRequiredWidth = Mathf.Max(InstallerTheme.Metrics.MinRequiredColumnWidth, mouseX - start);
+                return;
+            }
+
+            start += _requiredWidth;
+
+            _savedStatusWidth = Mathf.Max(InstallerTheme.Metrics.MinStatusColumnWidth, mouseX - start);
         }
 
         private void Save()
         {
             EditorPrefs.SetFloat(NameWidthKey, _savedNameWidth);
+            EditorPrefs.SetFloat(RequiredWidthKey, _savedRequiredWidth);
             EditorPrefs.SetFloat(StatusWidthKey, _savedStatusWidth);
         }
     }

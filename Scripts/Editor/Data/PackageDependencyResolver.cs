@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Base.PackageInstaller.Data
@@ -5,27 +6,54 @@ namespace Base.PackageInstaller.Data
     /// <summary>
     /// Walks the dependency graph declared by <see cref="PackageEntry.DependsOn"/>.
     /// <para>
-    /// Two jobs: making sure a selection is complete, so a package is never installed without what
-    /// it needs, and putting the selection in an order that installs dependencies first, so the
-    /// project compiles at every step of a run rather than only at the end.
+    /// The window keeps two sets of flags: the rows the user ticked, and the rows that are
+    /// actually going to be processed. Only the first is ever edited by hand; the second is
+    /// derived here from scratch every time the first changes. That is what makes unticking a
+    /// package release the dependencies it pulled in, while leaving alone anything another ticked
+    /// package still needs, or that the user ticked themselves.
     /// </para>
     /// </summary>
     internal static class PackageDependencyResolver
     {
+        private const string NameSeparator = ", ";
+
         /// <summary>
-        /// Selects every entry the current selection depends on, following the graph all the way
-        /// down. An entry that names a dependency the registry does not contain is left alone.
+        /// Derives the effective selection from what the user ticked, following the graph all the
+        /// way down. A dependency naming an entry the registry does not contain is ignored.
         /// </summary>
         /// <param name="packages">The registry entries, in the order the window lists them.</param>
-        /// <param name="selected">The per-entry selection flags, extended in place.</param>
-        internal static void ExpandSelection(PackageEntry[] packages, bool[] selected)
+        /// <param name="userSelected">The rows the user ticked. Never modified.</param>
+        /// <param name="selected">Filled with the rows that will be processed.</param>
+        /// <param name="requiredBy">
+        /// Filled with the names of the selected entries that require each package, or <c>null</c>
+        /// where nothing requires it. This is what the window shows in the Required By column, and
+        /// it is filled either way: with dependencies off it reports what a pick would have pulled
+        /// in, which is exactly the information needed to judge whether leaving it out is safe.
+        /// </param>
+        /// <param name="expandDependencies">
+        /// False to take the user's picks exactly as they are. Nothing is added, so a single
+        /// package can be updated on its own without its whole chain coming along.
+        /// </param>
+        internal static void Resolve(PackageEntry[] packages, bool[] userSelected, bool[] selected,
+            string[] requiredBy, bool expandDependencies)
         {
-            if (packages == null || selected == null)
+            if (packages == null || userSelected == null || selected == null)
                 return;
+
+            Array.Copy(userSelected, selected, selected.Length);
 
             Dictionary<string, int> byName = BuildIndex(packages);
 
-            // A dependency can itself pull in another one, so the pass repeats until it adds nothing.
+            if (expandDependencies)
+                Expand(packages, selected, byName);
+
+            FillRequiredBy(packages, selected, byName, requiredBy);
+        }
+
+        // A dependency can itself pull in another one, so the pass repeats until it adds nothing.
+        private static void Expand(PackageEntry[] packages, bool[] selected,
+            IReadOnlyDictionary<string, int> byName)
+        {
             bool changed = true;
 
             while (changed)
@@ -51,6 +79,12 @@ namespace Base.PackageInstaller.Data
 
         /// <summary>
         /// Orders the selected entries so every package comes after the ones it depends on.
+        /// <para>
+        /// Works outwards in layers: everything whose dependencies are already satisfied goes
+        /// first, so a run starts at the leaves and climbs the chain. Each package therefore lands
+        /// in a project where everything it needs is already present, which is what keeps the
+        /// recompile after each install clean instead of erroring until the last one arrives.
+        /// </para>
         /// </summary>
         /// <param name="packages">The registry entries, in the order the window lists them.</param>
         /// <param name="selected">The per-entry selection flags.</param>
@@ -63,13 +97,30 @@ namespace Base.PackageInstaller.Data
                 return ordered;
 
             Dictionary<string, int> byName = BuildIndex(packages);
-            HashSet<int> emitted = new();
-            HashSet<int> visiting = new();
+            List<int> remaining = new();
 
             for (int i = 0; i < packages.Length; i++)
             {
                 if (selected[i])
-                    Emit(i, packages, selected, byName, emitted, visiting, ordered);
+                    remaining.Add(i);
+            }
+
+            HashSet<int> placed = new();
+
+            while (remaining.Count > 0)
+            {
+                int next = TakeReady(remaining, packages, byName, placed);
+
+                // Nothing is ready, so whatever is left depends on itself in a loop. The registry
+                // page reports that; here the run continues in list order rather than stalling.
+                if (next < 0)
+                    next = 0;
+
+                int index = remaining[next];
+
+                remaining.RemoveAt(next);
+                placed.Add(index);
+                ordered.Add(packages[index].Url);
             }
 
             return ordered;
@@ -85,29 +136,60 @@ namespace Base.PackageInstaller.Data
             return byName;
         }
 
-        // Depth-first post-order: a package is appended only once everything below it has been.
-        private static void Emit(int index, PackageEntry[] packages, bool[] selected,
-            IReadOnlyDictionary<string, int> byName, ISet<int> emitted, ISet<int> visiting, List<string> ordered)
+        // Every selected package claims the entries it directly needs, so a row can name all of
+        // its holders rather than only the first one that happened to reach it.
+        private static void FillRequiredBy(PackageEntry[] packages, bool[] selected,
+            IReadOnlyDictionary<string, int> byName, string[] requiredBy)
         {
-            if (emitted.Contains(index))
+            if (requiredBy == null)
                 return;
 
-            // A cycle would recurse forever. The graph is hand-written, so treat one as an authoring
-            // mistake and fall back to the order the entry was reached in.
-            if (!visiting.Add(index))
-                return;
+            Array.Clear(requiredBy, 0, requiredBy.Length);
 
-            foreach (string dependency in packages[index].DependsOn)
+            for (int i = 0; i < packages.Length; i++)
             {
-                if (byName.TryGetValue(dependency, out int dependencyIndex)
-                    && selected[dependencyIndex])
-                    Emit(dependencyIndex, packages, selected, byName, emitted, visiting, ordered);
+                if (!selected[i])
+                    continue;
+
+                foreach (string dependency in packages[i].DependsOn)
+                {
+                    if (!byName.TryGetValue(dependency, out int index) || index == i)
+                        continue;
+
+                    requiredBy[index] = string.IsNullOrEmpty(requiredBy[index])
+                        ? packages[i].Name
+                        : requiredBy[index] + NameSeparator + packages[i].Name;
+                }
+            }
+        }
+
+        // The first entry whose selected dependencies have all been placed. The registry is sorted
+        // by name, so a whole layer comes out alphabetically before the next one starts.
+        private static int TakeReady(IReadOnlyList<int> remaining, PackageEntry[] packages,
+            IReadOnlyDictionary<string, int> byName, ICollection<int> placed)
+        {
+            for (int i = 0; i < remaining.Count; i++)
+            {
+                if (IsReady(packages[remaining[i]], remaining[i], byName, placed))
+                    return i;
             }
 
-            visiting.Remove(index);
-            emitted.Add(index);
+            return -1;
+        }
 
-            ordered.Add(packages[index].Url);
+        private static bool IsReady(PackageEntry entry, int index, IReadOnlyDictionary<string, int> byName,
+            ICollection<int> placed)
+        {
+            foreach (string dependency in entry.DependsOn)
+            {
+                if (!byName.TryGetValue(dependency, out int dependencyIndex))
+                    continue;
+
+                if (dependencyIndex != index && !placed.Contains(dependencyIndex))
+                    return false;
+            }
+
+            return true;
         }
     }
 }

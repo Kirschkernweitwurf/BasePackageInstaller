@@ -19,6 +19,7 @@ namespace Base.PackageInstaller.Window.Theme
             internal const int CellTextPadding = 4;
             internal const float ClearButtonWidth = 60f;
             internal const float DefaultNameColumnWidth = 180f;
+            internal const float DefaultRequiredColumnWidth = 150f;
             internal const float DefaultStatusColumnWidth = 112f;
             internal const int DescriptionFontSize = 11;
             internal const float DividerHitWidth = 8f;
@@ -30,6 +31,7 @@ namespace Base.PackageInstaller.Window.Theme
 
             internal const float ItemSpacing = 8f;
             internal const float MinNameColumnWidth = 90f;
+            internal const float MinRequiredColumnWidth = 80f;
             internal const float MinStatusColumnWidth = 72f;
             internal const float MinVersionColumnWidth = 60f;
             internal const int PillCornerRadius = 8;

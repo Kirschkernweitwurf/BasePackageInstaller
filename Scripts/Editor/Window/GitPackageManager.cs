@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Base.PackageInstaller.Data;
 using Base.PackageInstaller.Operations;
@@ -25,6 +26,11 @@ namespace Base.PackageInstaller.Window
     {
         private const string ClearLabel = "Clear";
         private const string CreateInputServiceLabel = "Create ProjectInputService";
+        private const string DependenciesLabel = "Resolve Dependencies";
+        private const string DependenciesPrefsKey = "Base.PackageInstaller.ResolveDependencies";
+        private const string DependenciesTooltip = "Off: only the packages ticked by hand are processed, so a "
+            + "single package can be updated without its chain. The Required By column still reports what "
+            + "depends on what.";
         private const string DeselectAllLabel = "Deselect All";
         private const string Description = "Installs the selected git packages or updates them to the latest remote "
             + "version if they are already installed. Packages a selection depends on are added to it "
@@ -32,6 +38,7 @@ namespace Base.PackageInstaller.Window
         private const string EditListLabel = "Edit List";
         private const string InstallLabel = "Install Selected";
         private const string InstallOrUpdateLabel = "Install / Update Selected";
+        private const string NothingSelectedLabel = "Nothing Selected";
 
 #if BASE_PACKAGES_DEV
         private const bool IsBasePackageDev = true;
@@ -66,17 +73,22 @@ namespace Base.PackageInstaller.Window
         private static readonly GUILayoutOption EditListWidth =
             GUILayout.Width(InstallerTheme.Metrics.EditListButtonWidth);
         private static readonly GUILayoutOption ClearWidth = GUILayout.Width(InstallerTheme.Metrics.ClearButtonWidth);
+        private static readonly GUIContent DependenciesContent = new(DependenciesLabel, DependenciesTooltip);
         private static readonly GUILayoutOption ExpandWidth = GUILayout.ExpandWidth(true);
 
         private readonly InstallerStyles _styles = new();
 
         private string _status;
         private bool _hasFailures;
+        private bool _resolveDependencies = true;
         private Vector2 _scroll;
 
         private PackageEntry[] _packages;
         private string[] _normalizedUrls;
         private bool[] _selected;
+        private bool[] _userSelected;
+        private bool[] _appliedSelection;
+        private string[] _requiredBy;
         private PackageStatus[] _rowStatuses;
 
         private IReadOnlyDictionary<string, PackageStatus> _statuses = new Dictionary<string, PackageStatus>();
@@ -89,6 +101,8 @@ namespace Base.PackageInstaller.Window
 #region Unity Callbacks
         private void OnEnable()
         {
+            _resolveDependencies = EditorPrefs.GetBool(DependenciesPrefsKey, true);
+
             RefreshPackages();
 
             _operation ??= new GitPackageOperation();
@@ -153,12 +167,14 @@ namespace Base.PackageInstaller.Window
             DrawPackagesToolbar();
             EditorGUILayout.Space(InstallerTheme.Metrics.TightSpacing);
 
-            _table.Draw(_packages, _selected, _rowStatuses, _statusChecked, ref _scroll);
+            // Has to run before the table draws. The table echoes each unlocked row's drawn state
+            // back into the user's picks, so drawing against a stale selection would overwrite
+            // whatever changed since the last frame, including the Select All and Deselect All
+            // buttons further down and the everything-selected default this window opens with.
+            ApplyDependencies();
 
-            // A package is never left selected without what it needs, so ticking one row can tick
-            // others. Applied every frame rather than on change, so an edited registry cannot leave
-            // an incomplete selection behind either.
-            PackageDependencyResolver.ExpandSelection(_packages, _selected);
+            _table.Draw(_packages, _selected, _userSelected, _requiredBy, _resolveDependencies, _rowStatuses,
+                _statusChecked, ref _scroll);
 
             EditorGUILayout.Space(InstallerTheme.Metrics.ItemSpacing);
             DrawSelectionButtons();
@@ -174,6 +190,10 @@ namespace Base.PackageInstaller.Window
             GUILayout.Label(PackagesHeader, _styles.SectionHeader);
             GUILayout.FlexibleSpace();
 
+            DrawDependencyToggle();
+
+            GUILayout.Space(InstallerTheme.Metrics.ItemSpacing);
+
             if (GUILayout.Button(RefreshLabel, _styles.SecondaryButton, RefreshWidth, ToolbarHeight))
                 RefreshAll();
 
@@ -183,6 +203,23 @@ namespace Base.PackageInstaller.Window
                 SettingsService.OpenProjectSettings(BasePackageSettingsProvider.Path);
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        // Turning this off leaves the user's own picks untouched, so the effective selection
+        // collapses back to them and switching it on again restores the full set.
+        private void DrawDependencyToggle()
+        {
+            EditorGUI.BeginChangeCheck();
+
+            bool resolve = GUILayout.Toggle(_resolveDependencies, DependenciesContent);
+
+            if (!EditorGUI.EndChangeCheck())
+                return;
+
+            _resolveDependencies = resolve;
+            EditorPrefs.SetBool(DependenciesPrefsKey, resolve);
+
+            ForceApplyDependencies();
         }
 
         private void DrawSelectionButtons()
@@ -202,9 +239,13 @@ namespace Base.PackageInstaller.Window
 
         private void DrawActionButton()
         {
-            EditorGUI.BeginDisabledGroup(_operation.IsRunning || IsBasePackageDev);
+            EInstallAction action = ResolveAction();
 
-            if (GUILayout.Button(GetActionLabel(), _styles.PrimaryButton, ActionHeight))
+            EditorGUI.BeginDisabledGroup(_operation.IsRunning
+                || IsBasePackageDev
+                || action == EInstallAction.Nothing);
+
+            if (GUILayout.Button(GetActionLabel(action), _styles.PrimaryButton, ActionHeight))
                 StartOperation();
 
             EditorGUI.EndDisabledGroup();
@@ -256,18 +297,16 @@ namespace Base.PackageInstaller.Window
                 : MessageType.None;
         }
 
-        private string GetActionLabel() => ResolveAction() switch
+        private static string GetActionLabel(EInstallAction action) => action switch
         {
             EInstallAction.Install => InstallLabel,
+            EInstallAction.Nothing => NothingSelectedLabel,
             EInstallAction.Update => UpdateLabel,
             _ => InstallOrUpdateLabel
         };
 
         private EInstallAction ResolveAction()
         {
-            if (!_statusChecked)
-                return EInstallAction.InstallOrUpdate;
-
             int installed = 0;
             int notInstalled = 0;
 
@@ -282,10 +321,18 @@ namespace Base.PackageInstaller.Window
                     notInstalled++;
             }
 
-            if (notInstalled == 0 && installed > 0)
+            if (installed == 0 && notInstalled == 0)
+                return EInstallAction.Nothing;
+
+            // Which of the two verbs applies is only known once the statuses are in, so until then
+            // the button offers both rather than guessing and changing its mind a moment later.
+            if (!_statusChecked)
+                return EInstallAction.InstallOrUpdate;
+
+            if (notInstalled == 0)
                 return EInstallAction.Update;
 
-            if (installed == 0 && notInstalled > 0)
+            if (installed == 0)
                 return EInstallAction.Install;
 
             return EInstallAction.InstallOrUpdate;
@@ -301,13 +348,45 @@ namespace Base.PackageInstaller.Window
 
         private void SetAllSelected(bool value)
         {
-            for (int i = 0; i < _selected.Length; i++)
-                _selected[i] = value;
+            for (int i = 0; i < _userSelected.Length; i++)
+                _userSelected[i] = value;
+        }
+
+        // The effective selection is derived from what the user picked rather than edited in
+        // place, so releasing a package also releases whatever only it needed. Recomputed only
+        // when the user's picks actually moved, because OnGUI runs on every repaint and the walk
+        // joins a string per held row.
+        private void ApplyDependencies()
+        {
+            if (!HasSelectionChanged())
+                return;
+
+            ForceApplyDependencies();
+        }
+
+        // The cached copy only tracks the user's picks, so a change to the toggle has to bypass it.
+        private void ForceApplyDependencies()
+        {
+            PackageDependencyResolver.Resolve(_packages, _userSelected, _selected, _requiredBy,
+                _resolveDependencies);
+
+            Array.Copy(_userSelected, _appliedSelection, _userSelected.Length);
+        }
+
+        private bool HasSelectionChanged()
+        {
+            for (int i = 0; i < _userSelected.Length; i++)
+            {
+                if (_userSelected[i] != _appliedSelection[i])
+                    return true;
+            }
+
+            return false;
         }
 
         private void StartOperation()
         {
-            PackageDependencyResolver.ExpandSelection(_packages, _selected);
+            ForceApplyDependencies();
 
             List<string> urls = PackageDependencyResolver.ResolveOrder(_packages, _selected);
 
@@ -331,12 +410,18 @@ namespace Base.PackageInstaller.Window
             _packages = BasePackageRegistry.instance.SortedPackages;
             _normalizedUrls = new string[_packages.Length];
             _selected = new bool[_packages.Length];
+            _userSelected = new bool[_packages.Length];
+
+            // Deliberately left all false so the first ApplyDependencies call sees a change and
+            // derives the selection, rather than starting out with a stale requiredBy.
+            _appliedSelection = new bool[_packages.Length];
+            _requiredBy = new string[_packages.Length];
             _rowStatuses = new PackageStatus[_packages.Length];
 
             for (int i = 0; i < _packages.Length; i++)
             {
                 _normalizedUrls[i] = PackageStatusChecker.Normalize(_packages[i].Url);
-                _selected[i] = true;
+                _userSelected[i] = true;
             }
 
             FillRowStatuses();
