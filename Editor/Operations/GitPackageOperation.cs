@@ -1,3 +1,4 @@
+using Base.PackageInstaller.Data;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 
@@ -11,6 +12,9 @@ namespace Base.PackageInstaller.Operations
     internal sealed class GitPackageOperation : PackageOperation
     {
         /// <inheritdoc/>
-        protected override Request CreateRequest(string url) => Client.Add(url);
+        protected override EPackageAction Action => EPackageAction.Add;
+
+        /// <inheritdoc/>
+        protected override Request CreateRequest(string id) => Client.Add(id);
     }
 }

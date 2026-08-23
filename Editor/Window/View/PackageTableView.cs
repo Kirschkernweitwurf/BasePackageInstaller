@@ -7,17 +7,19 @@ namespace Base.PackageInstaller.Window.View
 {
     /// <summary>
     /// Renders the package table: a column header plus one striped row per package inside a card,
-    /// each row showing a selection toggle, name, what depends on it, a colored status pill and the
-    /// installed version. Columns are laid out by explicit rectangles through
+    /// each row showing a selection toggle, name, what drags it into the run, a colored status
+    /// pill and the installed version. Columns are laid out by explicit rectangles through
     /// <see cref="TableColumnLayout"/>, so the header and every row line up exactly and the
     /// dividers between columns can be dragged.
     /// <para>
-    /// A row another selected package depends on is drawn dimmed with a locked toggle, and the
-    /// Required By column names the packages holding it, so the lock never needs explaining.
+    /// A row another selected package drags in is drawn dimmed with a locked toggle, and the third
+    /// column names the packages holding it, so the lock never needs explaining. Uninstalling,
+    /// a package that is not installed has nothing to remove and is drawn dimmed and unpickable.
     /// </para>
     /// </summary>
     internal sealed class PackageTableView
     {
+        private const string DependsOnColumn = "Depends On";
         private const string MissingValue = "-";
         private const string PackageColumn = "Package";
         private const string RequiredColumn = "Required By";
@@ -30,7 +32,7 @@ namespace Base.PackageInstaller.Window.View
 
         private readonly InstallerStyles _styles;
         private readonly TableColumnLayout _columns = new();
-        private readonly GUIContent _requiredContent = new();
+        private readonly GUIContent _heldContent = new();
 
         /// <summary>Creates the table view.</summary>
         /// <param name="styles">The shared style cache the table draws with.</param>
@@ -41,33 +43,35 @@ namespace Base.PackageInstaller.Window.View
         /// <param name="selected">The rows that will be processed, drawn as the tick state.</param>
         /// <param name="userSelected">
         /// The rows the user ticked, which is the only array a click writes to. What a package
-        /// pulled in follows from this, so releasing a package releases what only it needed.
+        /// dragged in follows from this, so releasing a package releases what only it held.
         /// </param>
-        /// <param name="requiredBy">
-        /// Per row, the selected packages that depend on it, or <c>null</c> when nothing does.
+        /// <param name="heldBy">
+        /// Per row, the selected packages that drag it into the run, or <c>null</c> when nothing
+        /// does. Installing, those are the packages that require it; removing, the ones it requires.
         /// </param>
-        /// <param name="lockRequired">
+        /// <param name="lockHeld">
         /// True while the window resolves dependencies, which is what makes a held row read-only.
         /// With resolving off the column still reports the holders, but every row stays editable.
         /// </param>
         /// <param name="statuses">The per-row install status.</param>
         /// <param name="statusChecked">False while the install statuses are still being queried.</param>
+        /// <param name="mode">The direction the window is working in.</param>
         /// <param name="scroll">The scroll position of the table, written back on user input.</param>
-        internal void Draw(PackageEntry[] packages, bool[] selected, bool[] userSelected, string[] requiredBy,
-            bool lockRequired, PackageStatus[] statuses, bool statusChecked, ref Vector2 scroll)
+        internal void Draw(PackageEntry[] packages, bool[] selected, bool[] userSelected, string[] heldBy,
+            bool lockHeld, PackageStatus[] statuses, bool statusChecked, EPackageMode mode, ref Vector2 scroll)
         {
             scroll = EditorGUILayout.BeginScrollView(scroll);
             Rect card = EditorGUILayout.BeginVertical(_styles.Card);
 
             Rect header = ReserveRow(InstallerTheme.Metrics.RowHeight);
             _columns.Recalculate(ColumnsArea(header).width);
-            DrawHeader(header);
+            DrawHeader(header, mode);
             DrawSeparator();
 
             for (int i = 0; i < packages.Length; i++)
             {
-                DrawRow(i, packages[i], selected, userSelected, RequiredBy(requiredBy, i), lockRequired,
-                    statuses[i], statusChecked);
+                DrawRow(i, packages[i], selected, userSelected, HeldBy(heldBy, i), lockHeld,
+                    statuses[i], statusChecked, mode);
             }
 
             // Dividers span the whole card so a column can be resized from any row, not just the
@@ -106,9 +110,9 @@ namespace Base.PackageInstaller.Window.View
             return new Rect(cell.x, y, size, size);
         }
 
-        private static string RequiredBy(string[] requiredBy, int index) => requiredBy == null
+        private static string HeldBy(string[] heldBy, int index) => heldBy == null
             ? null
-            : requiredBy[index];
+            : heldBy[index];
 
         private static void DrawSeparator()
         {
@@ -122,18 +126,24 @@ namespace Base.PackageInstaller.Window.View
             ? status.Version
             : MissingValue;
 
-        private void DrawHeader(Rect row)
+        // Both modes name the packages that drag a row into the run, but along opposite edges:
+        // installing they are the ones that require it, removing the ones it requires.
+        private static string HeldColumn(EPackageMode mode) => mode == EPackageMode.Install
+            ? RequiredColumn
+            : DependsOnColumn;
+
+        private void DrawHeader(Rect row, EPackageMode mode)
         {
             Rect area = ColumnsArea(row);
 
             GUI.Label(_columns.NameRect(area), PackageColumn, _styles.ColumnHeader);
-            GUI.Label(_columns.RequiredRect(area), RequiredColumn, _styles.ColumnHeader);
+            GUI.Label(_columns.RequiredRect(area), HeldColumn(mode), _styles.ColumnHeader);
             GUI.Label(_columns.StatusRect(area), StatusColumn, _styles.ColumnHeader);
             GUI.Label(_columns.VersionRect(area), VersionColumn, _styles.ColumnHeader);
         }
 
         private void DrawRow(int index, PackageEntry package, bool[] selected, bool[] userSelected,
-            string requiredBy, bool lockRequired, PackageStatus status, bool statusChecked)
+            string heldBy, bool lockHeld, PackageStatus status, bool statusChecked, EPackageMode mode)
         {
             Rect row = ReserveRow(InstallerTheme.Metrics.RowHeight);
 
@@ -141,22 +151,40 @@ namespace Base.PackageInstaller.Window.View
                 EditorGUI.DrawRect(row, InstallerTheme.Palette.RowStripe);
 
             Rect area = ColumnsArea(row);
-            bool isLocked = lockRequired && !string.IsNullOrEmpty(requiredBy);
 
-            DrawToggle(_columns.SelectionRect(area), selected, userSelected, index, isLocked);
+            // Nothing to take away, so the row is out of the run whatever the graph says about it.
+            bool isUnavailable = mode == EPackageMode.Uninstall && statusChecked && !status.IsInstalled;
+            bool isLocked = lockHeld && !string.IsNullOrEmpty(heldBy);
 
-            GUI.Label(_columns.NameRect(area), package.Name, isLocked
-                ? _styles.RequiredLabel
+            DrawToggle(_columns.SelectionRect(area), selected, userSelected, index, isLocked, isUnavailable);
+
+            GUI.Label(_columns.NameRect(area), package.Name, isLocked || isUnavailable
+                ? _styles.DimmedLabel
                 : _styles.RowLabel);
 
-            DrawRequiredBy(_columns.RequiredRect(area), requiredBy);
+            DrawHeldBy(_columns.RequiredRect(area), isUnavailable
+                ? null
+                : heldBy);
+
             DrawStatusPill(_columns.StatusRect(area), status, statusChecked);
             GUI.Label(_columns.VersionRect(area), VersionText(status), _styles.RowLabel);
         }
 
-        private void DrawToggle(Rect cell, bool[] selected, bool[] userSelected, int index, bool isLocked)
+        private void DrawToggle(Rect cell, bool[] selected, bool[] userSelected, int index, bool isLocked,
+            bool isUnavailable)
         {
             Rect toggle = ToggleRect(cell);
+
+            // Drawn rather than skipped, so the table keeps one row per package in both modes and
+            // the columns to the right still read as belonging to something.
+            if (isUnavailable)
+            {
+                EditorGUI.BeginDisabledGroup(true);
+                EditorGUI.Toggle(toggle, false);
+                EditorGUI.EndDisabledGroup();
+
+                return;
+            }
 
             if (!isLocked)
             {
@@ -175,19 +203,19 @@ namespace Base.PackageInstaller.Window.View
 
         // The column is narrow enough to clip a long list, so the full text is repeated as a
         // tooltip rather than being lost.
-        private void DrawRequiredBy(Rect cell, string requiredBy)
+        private void DrawHeldBy(Rect cell, string heldBy)
         {
-            bool isEmpty = string.IsNullOrEmpty(requiredBy);
+            bool isEmpty = string.IsNullOrEmpty(heldBy);
 
-            _requiredContent.text = isEmpty
+            _heldContent.text = isEmpty
                 ? MissingValue
-                : requiredBy;
+                : heldBy;
 
-            _requiredContent.tooltip = isEmpty
+            _heldContent.tooltip = isEmpty
                 ? string.Empty
-                : requiredBy;
+                : heldBy;
 
-            GUI.Label(cell, _requiredContent, _styles.RequiredColumnLabel);
+            GUI.Label(cell, _heldContent, _styles.HeldColumnLabel);
         }
 
         private void DrawStatusPill(Rect cell, PackageStatus status, bool statusChecked)

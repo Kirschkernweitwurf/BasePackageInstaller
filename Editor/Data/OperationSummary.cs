@@ -10,6 +10,9 @@ namespace Base.PackageInstaller.Data
         /// <summary>The result of every package that was processed.</summary>
         internal IReadOnlyList<PackageResult> Results { get; }
 
+        /// <summary>What the run did to the packages, which is what the headline is worded from.</summary>
+        internal EPackageAction Action { get; }
+
         /// <summary>The number of packages that succeeded.</summary>
         internal int SuccessCount { get; }
 
@@ -27,14 +30,16 @@ namespace Base.PackageInstaller.Data
 
         /// <summary>Creates the summary of a completed run.</summary>
         /// <param name="results">The result of every package that was processed.</param>
+        /// <param name="action">What the run did to the packages.</param>
         /// <param name="successCount">The number of packages that succeeded.</param>
         /// <param name="failedCount">The number of packages that failed.</param>
         /// <param name="changedCount">The number of packages whose installed content changed.</param>
         /// <param name="unchangedCount">The number of packages that were already up to date.</param>
-        internal OperationSummary(IReadOnlyList<PackageResult> results, int successCount,
+        internal OperationSummary(IReadOnlyList<PackageResult> results, EPackageAction action, int successCount,
             int failedCount, int changedCount, int unchangedCount)
         {
             Results = results;
+            Action = action;
             SuccessCount = successCount;
             FailedCount = failedCount;
             ChangedCount = changedCount;

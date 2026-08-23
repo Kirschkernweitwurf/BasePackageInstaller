@@ -18,6 +18,7 @@ namespace Base.PackageInstaller.Window.Theme
             internal const int CardVerticalPadding = 6;
             internal const int CellTextPadding = 4;
             internal const float ClearButtonWidth = 60f;
+            internal const float CopyButtonWidth = 56f;
             internal const float DefaultNameColumnWidth = 180f;
             internal const float DefaultRequiredColumnWidth = 150f;
             internal const float DefaultStatusColumnWidth = 112f;
@@ -46,6 +47,8 @@ namespace Base.PackageInstaller.Window.Theme
             internal const float RowHeight = 22f;
             internal const float SecondaryButtonHeight = 22f;
             internal const float SectionSpacing = 12f;
+            internal const float SegmentHeight = 24f;
+            internal const int SegmentTrackPadding = 2;
             internal const float SelectionColumnWidth = 22f;
             internal const float SeparatorThickness = 1f;
             internal const float SettingsPageSpacing = 4f;
@@ -54,6 +57,7 @@ namespace Base.PackageInstaller.Window.Theme
             internal const int TitleFontSize = 15;
             internal const float ToggleSize = 16f;
             internal const float ToolbarButtonHeight = 20f;
+            internal const int WindowPadding = 6;
         }
 
         /// <summary>Palette with separate values for the dark (pro) and light editor skins.</summary>
@@ -84,6 +88,12 @@ namespace Base.PackageInstaller.Window.Theme
             internal static Color CheckingText => Pick(new Color(0.62f, 0.62f, 0.66f), new Color(0.45f, 0.45f, 0.50f));
 
             internal static Color Card => Pick(new Color(0.22f, 0.22f, 0.24f), new Color(0.85f, 0.85f, 0.87f));
+
+            /// <summary>The recessed rail the mode segments sit in, one step behind the card.</summary>
+            internal static Color SegmentTrack => Pick(new Color(0.17f, 0.17f, 0.19f), new Color(0.78f, 0.78f, 0.80f));
+
+            /// <summary>A segment the pointer is over but which is not the active one.</summary>
+            internal static Color SegmentHover => Pick(new Color(1f, 1f, 1f, 0.06f), new Color(0f, 0f, 0f, 0.05f));
 
             internal static Color RowStripe => Pick(new Color(1f, 1f, 1f, 0.03f), new Color(0f, 0f, 0f, 0.03f));
 
