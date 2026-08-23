@@ -10,7 +10,8 @@ namespace Base.PackageInstaller.Operations
 {
     /// <summary>
     /// Queries the project's installed packages and maps them to registry entries by Git URL,
-    /// so the window can show which packages are installed and at what version.
+    /// so the window can show which packages are installed and at what version, and knows the
+    /// package names a removal has to be given.
     /// </summary>
     internal sealed class PackageStatusChecker
     {
@@ -70,7 +71,7 @@ namespace Base.PackageInstaller.Operations
             if (url.Length == 0)
                 return;
 
-            statuses[url] = new PackageStatus(true, info.version);
+            statuses[url] = new PackageStatus(true, info.name, info.version);
         }
 
         private void Poll()

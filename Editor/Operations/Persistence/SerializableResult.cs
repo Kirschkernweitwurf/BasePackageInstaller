@@ -17,6 +17,7 @@ namespace Base.PackageInstaller.Operations.Persistence
         [SerializeField] private bool changed;
         [SerializeField] private bool success;
         [SerializeField] private string error;
+        [SerializeField] private EPackageAction action;
 
         /// <summary>Creates the serializable mirror of a single result.</summary>
         /// <param name="result">The result to mirror.</param>
@@ -29,10 +30,12 @@ namespace Base.PackageInstaller.Operations.Persistence
             changed = result.Changed;
             success = result.Success;
             error = result.Error;
+            action = result.Action;
         }
 
         /// <summary>Rebuilds the immutable result this entry was created from.</summary>
         /// <returns>The restored result.</returns>
-        internal PackageResult ToResult() => new(label, name, version, previousVersion, changed, success, error);
+        internal PackageResult ToResult()
+            => new(label, name, version, previousVersion, changed, success, error, action);
     }
 }

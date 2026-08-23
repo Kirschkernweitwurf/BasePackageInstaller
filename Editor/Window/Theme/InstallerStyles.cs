@@ -21,9 +21,9 @@ namespace Base.PackageInstaller.Window.Theme
 
         internal GUIStyle RowLabel { get; private set; }
 
-        internal GUIStyle RequiredLabel { get; private set; }
+        internal GUIStyle DimmedLabel { get; private set; }
 
-        internal GUIStyle RequiredColumnLabel { get; private set; }
+        internal GUIStyle HeldColumnLabel { get; private set; }
 
         internal GUIStyle Card { get; private set; }
 
@@ -36,6 +36,14 @@ namespace Base.PackageInstaller.Window.Theme
         internal GUIStyle PrimaryButton { get; private set; }
 
         internal GUIStyle SecondaryButton { get; private set; }
+
+        internal GUIStyle SegmentTrack { get; private set; }
+
+        internal GUIStyle Segment { get; private set; }
+
+        internal GUIStyle SegmentSelected { get; private set; }
+
+        internal GUIStyle WindowBody { get; private set; }
 
         private readonly List<Texture2D> _ownedTextures = new();
 
@@ -93,6 +101,20 @@ namespace Base.PackageInstaller.Window.Theme
 
         private static RectOffset HorizontalPadding(int value) => new(value, value, 0, 0);
 
+        private static GUIStyle SegmentStyle(Color textColor, FontStyle fontStyle)
+        {
+            GUIStyle style = new()
+            {
+                alignment = TextAnchor.MiddleCenter,
+                fontStyle = fontStyle,
+                border = Uniform(InstallerTheme.Metrics.CardCornerRadius)
+            };
+
+            PinTextColor(style, textColor);
+
+            return style;
+        }
+
         private void Build()
         {
             Title = new GUIStyle(EditorStyles.boldLabel)
@@ -131,19 +153,19 @@ namespace Base.PackageInstaller.Window.Theme
 
             // A package another one depends on: same row, dimmed, so the locked toggle next to it
             // reads as deliberate rather than broken.
-            RequiredLabel = new GUIStyle(RowLabel);
-            PinTextColor(RequiredLabel, InstallerTheme.Palette.Description);
+            DimmedLabel = new GUIStyle(RowLabel);
+            PinTextColor(DimmedLabel, InstallerTheme.Palette.Description);
 
             // The list of holders is secondary information and can be long, so it is drawn smaller
             // and clipped with an ellipsis instead of pushing the other columns around.
-            RequiredColumnLabel = new GUIStyle(EditorStyles.miniLabel)
+            HeldColumnLabel = new GUIStyle(EditorStyles.miniLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
                 clipping = TextClipping.Ellipsis,
                 padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
 
-            PinTextColor(RequiredColumnLabel, InstallerTheme.Palette.Description);
+            PinTextColor(HeldColumnLabel, InstallerTheme.Palette.Description);
 
             Card = RoundedStyle(InstallerTheme.Palette.Card, InstallerTheme.Metrics.CardCornerRadius);
             Card.padding = new RectOffset(0, 0, InstallerTheme.Metrics.CardVerticalPadding,
@@ -166,6 +188,37 @@ namespace Base.PackageInstaller.Window.Theme
 
             SecondaryButton = ButtonStyle(InstallerTheme.Palette.Secondary, InstallerTheme.Palette.SecondaryText,
                 FontStyle.Normal);
+
+            // The rail is drawn with the same rounded corners as the card and the buttons, so the
+            // mode switch reads as part of the window rather than as an editor toolbar dropped in.
+            SegmentTrack = RoundedStyle(InstallerTheme.Palette.SegmentTrack,
+                InstallerTheme.Metrics.CardCornerRadius);
+
+            Segment = SegmentStyle(InstallerTheme.Palette.SecondaryText, FontStyle.Normal);
+            SegmentSelected = SegmentStyle(InstallerTheme.Palette.AccentText, FontStyle.Bold);
+
+            // Only the active segment is filled. The other one lets the rail show through, so the
+            // pair reads as one control with a highlight moving across it.
+            SegmentSelected.normal.background = RoundedTexture(InstallerTheme.Palette.Accent,
+                InstallerTheme.Metrics.CardCornerRadius);
+
+            SegmentSelected.hover.background = RoundedTexture(
+                Shift(InstallerTheme.Palette.Accent, InstallerTheme.Metrics.HoverLift),
+                InstallerTheme.Metrics.CardCornerRadius);
+
+            Segment.hover.background = RoundedTexture(InstallerTheme.Palette.SegmentHover,
+                InstallerTheme.Metrics.CardCornerRadius);
+
+            SegmentSelected.active.background = SegmentSelected.normal.background;
+            SegmentSelected.focused.background = SegmentSelected.normal.background;
+            Segment.active.background = Segment.hover.background;
+
+            // Nothing but an inset. Every section inside keeps its own spacing, so this only stops
+            // the content sitting flush against the window edges.
+            WindowBody = new GUIStyle
+            {
+                padding = Uniform(InstallerTheme.Metrics.WindowPadding)
+            };
         }
 
         private GUIStyle PillStyle(Color background, Color text)
@@ -185,7 +238,7 @@ namespace Base.PackageInstaller.Window.Theme
 
         private GUIStyle ButtonStyle(Color background, Color textColor, FontStyle fontStyle)
         {
-            int radius = InstallerTheme.Metrics.CardCornerRadius;
+            const int radius = InstallerTheme.Metrics.CardCornerRadius;
             GUIStyle style = RoundedStyle(background, radius);
 
             style.alignment = TextAnchor.MiddleCenter;
@@ -207,10 +260,12 @@ namespace Base.PackageInstaller.Window.Theme
         {
             GUIStyle style = new()
             {
-                border = Uniform(radius)
+                border = Uniform(radius),
+                normal =
+                {
+                    background = RoundedTexture(color, radius)
+                }
             };
-
-            style.normal.background = RoundedTexture(color, radius);
 
             return style;
         }

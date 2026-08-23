@@ -8,22 +8,23 @@ namespace Base.PackageInstaller.Operations.Persistence
     /// <summary>
     /// Serializable snapshot of a running package operation.
     /// Used to persist progress across editor domain reloads so a run can resume
-    /// after a package installation triggers a recompile.
+    /// after a package installation or removal triggers a recompile.
     /// </summary>
     /// <remarks>
-    /// This type intentionally mirrors the immutable data structs into serializable form,
-    /// so those structs stay decoupled from the persistence layer.
+    /// The immutable data structs are mirrored into serializable form here, so those structs stay
+    /// decoupled from the persistence layer. <see cref="PackageRequest"/> is the exception: it is
+    /// serializable to begin with, precisely because it exists to survive a reload.
     /// </remarks>
     [Serializable]
     internal sealed class PackageOperationState
     {
-        [SerializeField] private string[] remainingUrls;
+        [SerializeField] private PackageRequest[] remainingRequests;
         [SerializeField] private SerializableResult[] results;
         [SerializeField] private SerializableSnapshotEntry[] snapshot;
         [SerializeField] private bool hasSnapshot;
 
-        /// <summary>The package URLs that still need to be processed, head first.</summary>
-        internal string[] RemainingUrls => remainingUrls ?? Array.Empty<string>();
+        /// <summary>The packages that still need to be processed, head first.</summary>
+        internal PackageRequest[] RemainingRequests => remainingRequests ?? Array.Empty<PackageRequest>();
 
         /// <summary>True if the pre-operation installed snapshot has been captured.</summary>
         internal bool HasSnapshot => hasSnapshot;
@@ -31,24 +32,24 @@ namespace Base.PackageInstaller.Operations.Persistence
         /// <summary>
         /// Builds a serializable state from the live operation data.
         /// </summary>
-        /// <param name="remaining">The not-yet-completed URLs, head first.</param>
+        /// <param name="remaining">The not-yet-completed packages, head first.</param>
         /// <param name="results">The results gathered so far.</param>
         /// <param name="snapshot">The pre-operation installed packages keyed by name.</param>
         /// <param name="hasSnapshot">Whether the snapshot has already been captured.</param>
         /// <returns>A state object ready to be serialized.</returns>
-        internal static PackageOperationState Create(IReadOnlyCollection<string> remaining,
+        internal static PackageOperationState Create(IReadOnlyCollection<PackageRequest> remaining,
             IReadOnlyList<PackageResult> results, IReadOnlyDictionary<string, InstalledPackage> snapshot,
             bool hasSnapshot)
         {
-            string[] urls = new string[remaining.Count];
+            PackageRequest[] pending = new PackageRequest[remaining.Count];
             int index = 0;
 
-            foreach (string url in remaining)
-                urls[index++] = url;
+            foreach (PackageRequest request in remaining)
+                pending[index++] = request;
 
             return new PackageOperationState
             {
-                remainingUrls = urls,
+                remainingRequests = pending,
                 results = ToSerializable(results),
                 snapshot = ToSerializable(snapshot),
                 hasSnapshot = hasSnapshot

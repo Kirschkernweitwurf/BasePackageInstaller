@@ -26,6 +26,9 @@ namespace Base.PackageInstaller.Window.Format
                 ? result.Label
                 : result.Name;
 
+            if (result.Action == EPackageAction.Remove)
+                return DescribeRemoval(resultName, result.PreviousVersion);
+
             if (string.IsNullOrEmpty(result.Version))
                 return $"Installed {resultName}.";
 
@@ -45,13 +48,12 @@ namespace Base.PackageInstaller.Window.Format
         {
             StringBuilder builder = new();
 
-            builder.Append($"Done. {summary.SuccessCount} ok");
-
-            if (summary.ChangedCount > 0)
-                builder.Append($", {summary.ChangedCount} changed");
-
-            if (summary.UnchangedCount > 0)
-                builder.Append($", {summary.UnchangedCount} unchanged");
+            // A removal has nothing to say about versions, so the changed and unchanged counts
+            // that make an install readable would only be noise here.
+            if (summary.Action == EPackageAction.Remove)
+                builder.Append($"Done. {summary.SuccessCount} removed");
+            else
+                AppendInstallCounts(builder, summary);
 
             if (summary.FailedCount > 0)
                 builder.Append($", {summary.FailedCount} failed");
@@ -65,6 +67,25 @@ namespace Base.PackageInstaller.Window.Format
             }
 
             return builder.ToString();
+        }
+
+        private static string DescribeRemoval(string name, string previousVersion)
+        {
+            if (string.IsNullOrEmpty(previousVersion))
+                return $"Removed {name}.";
+
+            return $"Removed {name} ({previousVersion}).";
+        }
+
+        private static void AppendInstallCounts(StringBuilder builder, OperationSummary summary)
+        {
+            builder.Append($"Done. {summary.SuccessCount} ok");
+
+            if (summary.ChangedCount > 0)
+                builder.Append($", {summary.ChangedCount} changed");
+
+            if (summary.UnchangedCount > 0)
+                builder.Append($", {summary.UnchangedCount} unchanged");
         }
     }
 }
