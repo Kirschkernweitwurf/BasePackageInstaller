@@ -15,7 +15,7 @@ namespace Base.PackageInstaller.Settings
     {
         private const char LineBreak = '\n';
         private const string PageLabel = "Git Packages";
-        private const string SettingsPath = "Project/Custom Tools/Git Packages";
+        private const string SettingsPath = "Project/Base Tools/Git Packages";
 
         /// <summary>
         /// The settings path used to open this page programmatically.

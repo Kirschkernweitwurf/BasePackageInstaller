@@ -1,5 +1,4 @@
 using Base.CorePackage.Input;
-using Input;
 using UnityEngine.InputSystem;
 
 namespace Generated.Input
@@ -8,7 +7,7 @@ namespace Generated.Input
     /// Project-specific input service. Owns the generated <see cref="PlayerInputActions"/>
     /// instance and exposes it through <see cref="Actions"/>. Everything else is inherited.
     /// </summary>
-    public class ProjectInputService : ProjectInputServiceBase
+    public sealed class ProjectInputService : ProjectInputServiceBase
     {
         /// <summary>
         /// The instance of the generated project specific input actions class.
@@ -16,7 +15,7 @@ namespace Generated.Input
         public PlayerInputActions Actions { get; private set; }
 
         /// <inheritdoc/>
-        protected override InputActionAsset RuntimeAsset => Actions.asset;
+        protected override InputActionAsset RuntimeAsset => Actions?.asset;
 
 #region Unity Callbacks
         protected override void Awake()
@@ -28,9 +27,12 @@ namespace Generated.Input
 
         protected override void OnDestroy()
         {
+            // Runs first on purpose: the base disables every map still held, which has to happen
+            // while the asset those maps belong to is still alive.
             base.OnDestroy();
 
             Actions?.Dispose();
+            Actions = null;
         }
 #endregion
     }
