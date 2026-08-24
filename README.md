@@ -40,7 +40,7 @@ The same holds in reverse, and the Package Manager knows about that even less. S
 - Installs in dependency order, deepest first, so the project compiles after every step
 - Uninstalls in the reverse order, and warns before leaving anything behind that would no longer compile
 - Shows a table with each package's install status, version and what pulls it into the run
-- Keeps the package list in a per-project registry you can edit under **Project Settings -> Custom Tools -> Git Packages**
+- Keeps the package list in a per-project registry you can edit under **Project Settings -> Base Tools -> Git Packages**
 - Checks that registry for missing names, missing URLs, duplicates, unknown dependencies and dependency loops
 - Survives the domain reloads that package installs and removals trigger, so a run always finishes
 - Offers a one-click project setup that generates a preferred `ProjectInputService`, a `PlayerInputActions` action asset and the matching auto-generated C# class
@@ -107,7 +107,7 @@ All spacings, sizes and colors are defined in a single theme class, so the look 
 
 ## The package registry
 
-The list of available packages is stored per project in `ProjectSettings/BasePackageRegistry.asset`, so it can be version controlled and edited per project. It is seeded with the default base packages on first use; after that you can add, remove or rename entries under **Project Settings -> Custom Tools -> Git Packages**. New or changed defaults are merged in on **Refresh** without discarding your project-specific entries.
+The list of available packages is stored per project in `ProjectSettings/BasePackageRegistry.asset`, so it can be version controlled and edited per project. It is seeded with the default base packages on first use; after that you can add, remove or rename entries under **Project Settings -> Base Tools -> Git Packages**. New or changed defaults are merged in on **Refresh** without discarding your project-specific entries.
 
 Each entry has a name, a Git URL and the names of the entries it directly needs. Only direct dependencies are listed; the rest of the chain is walked for you. Dependencies are matched by name, so renaming an entry means updating everything that names it. The settings page reports it when something is off: an entry with no name or no URL, a name listed twice, a dependency that is not in the list, an entry depending on itself, or two entries depending on each other.
 
