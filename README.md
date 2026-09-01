@@ -13,7 +13,7 @@ A Unity editor window that installs and updates my [BaseProjectPackages](https:/
    ```
    https://github.com/Kirschkernweitwurf/BasePackageInstaller.git
    ```
-5. Open `Tools > Git Package Manager`
+5. Open `Tools > Installer > Git Package Manager`
 
 ## Why install through this rather than by hand
 
@@ -32,7 +32,7 @@ Editor UI -> Utility -> Attributes -> Services -> Tweening -> Core -> UI
 
 ## Using the window
 
-1. Open `Tools > Git Package Manager`
+1. Open `Tools > Installer > Git Package Manager`
 2. Tick the packages you want (or use **Select All**)
 3. Click the action button
 
@@ -55,13 +55,32 @@ Turn it **off** to take your ticks exactly as they are, which is what you want f
 
 ## The package registry
 
-The package list lives per project in `ProjectSettings/BasePackageRegistry.asset`, so it can be version controlled and edited per project. It is seeded with the default base packages on first use; after that you can add, remove or edit entries under **Project Settings -> Custom Tools -> Git Packages**. New or changed defaults are merged in on **Refresh** without discarding your project-specific entries.
+The package list lives per project in `ProjectSettings/BasePackageRegistry.asset`, so it can be version controlled and edited per project. It is seeded with the default base packages on first use; after that you can add, remove or edit entries under **Project Settings -> Base Tools -> Git Packages**. New or changed defaults are merged in on **Refresh** without discarding your project-specific entries.
 
 Each entry has a name, a Git URL and the names of the entries it directly needs. Only direct dependencies are listed; the rest of the chain is walked for you. Dependencies are matched by name, so renaming an entry means updating everything that names it.
 
 The settings page validates the registry and reports the mistakes that are otherwise invisible, because the resolver answers all of them by quietly doing nothing: an entry with no name or no URL, a name listed twice, a dependency that is not in the list, an entry depending on itself, and two entries depending on each other.
 
 Any Git package works here, not just mine. Add your own entries and they get the same dependency handling.
+
+## Generating the defaults
+
+`Tools > Installer > Package Defaults` regenerates the seeded list from the assembly definitions in
+the packages repository. It reads them off disk by path, so the packages do not have to be installed
+for it to run, and nothing it needs ships to a consuming project.
+
+Point it at the packages root and press **Scan**. It reads every asmdef, resolves the references
+between packages, and drops the edges another edge already implies, so the list stays the direct
+dependencies rather than the whole closure. Assemblies behind a define constraint and test assemblies
+are left out, so an optional integration never becomes a hard dependency.
+
+Three tabs: the resolved graph, the file it would generate, and a diff against the file on disk. The
+pill beside the target says whether the two already match. **Write File** only writes when they do
+not.
+
+This exists because the installer cannot work the graph out at runtime. It has to know what a package
+needs before that package is anywhere on disk. Generating the list here and checking the result in
+keeps the asmdefs the single source of truth.
 
 ## Project setup
 

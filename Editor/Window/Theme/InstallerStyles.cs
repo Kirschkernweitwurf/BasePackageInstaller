@@ -11,38 +11,73 @@ namespace Base.PackageInstaller.Window.Theme
     /// </summary>
     internal sealed class InstallerStyles
     {
+        /// <summary>The window title.</summary>
         internal GUIStyle Title { get; private set; }
 
+        /// <summary>The wrapping paragraph under the title.</summary>
         internal GUIStyle Description { get; private set; }
 
+        /// <summary>The heading above a section of the window.</summary>
         internal GUIStyle SectionHeader { get; private set; }
 
+        /// <summary>The column names above the table, smaller and dimmed.</summary>
         internal GUIStyle ColumnHeader { get; private set; }
 
+        /// <summary>The package name in a row, and the version beside it.</summary>
         internal GUIStyle RowLabel { get; private set; }
 
+        /// <summary>
+
+        /// A row another selected package drags in, dimmed so its locked toggle reads as deliberate.
+
+        /// </summary>
         internal GUIStyle DimmedLabel { get; private set; }
 
+        /// <summary>
+
+        /// The holders column, drawn smaller and clipped with an ellipsis rather than pushing the other columns
+
+        /// around.
+
+        /// </summary>
         internal GUIStyle HeldColumnLabel { get; private set; }
 
+        /// <summary>The panel the table sits in.</summary>
         internal GUIStyle Card { get; private set; }
 
+        /// <summary>The pill on a row whose package is installed.</summary>
         internal GUIStyle InstalledPill { get; private set; }
 
+        /// <summary>The pill on a row whose package is missing.</summary>
         internal GUIStyle NotInstalledPill { get; private set; }
 
+        /// <summary>
+
+        /// The placeholder in the status column while the install statuses are still being queried.
+
+        /// </summary>
         internal GUIStyle CheckingLabel { get; private set; }
 
+        /// <summary>The action button at the bottom, filled with the accent color.</summary>
         internal GUIStyle PrimaryButton { get; private set; }
 
+        /// <summary>The toolbar and selection buttons.</summary>
         internal GUIStyle SecondaryButton { get; private set; }
 
+        /// <summary>The recessed rail the two mode segments sit in.</summary>
         internal GUIStyle SegmentTrack { get; private set; }
 
+        /// <summary>A mode segment that is not the active one, letting the rail show through.</summary>
         internal GUIStyle Segment { get; private set; }
 
+        /// <summary>The active mode segment, filled with the accent color.</summary>
         internal GUIStyle SegmentSelected { get; private set; }
 
+        /// <summary>
+
+        /// A transparent wrapper that keeps everything off the window edges. Nothing but an inset.
+
+        /// </summary>
         internal GUIStyle WindowBody { get; private set; }
 
         private readonly List<Texture2D> _ownedTextures = new();

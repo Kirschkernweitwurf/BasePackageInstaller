@@ -27,6 +27,11 @@ namespace Base.PackageInstaller.ProjectInput
         private const string ServiceFolder = "Assets/Generated/Input";
         private const string SetupTitle = "Project Input Setup";
 
+        /// <summary>True once the action asset, its generated wrapper and the service file all exist.</summary>
+        internal static bool IsSetUp => File.Exists(AssetPath)
+            && File.Exists(WrapperPath)
+            && File.Exists(ServicePath);
+
         private static readonly string AssetPath = $"{AssetFolder}/{AssetName}{AssetExtension}";
         private static readonly string ServicePath = $"{ServiceFolder}/{ServiceFileName}";
 
@@ -35,11 +40,6 @@ namespace Base.PackageInstaller.ProjectInput
         // of those would shadow UnityEngine.Input for every script in the project.
         private static readonly string WrapperPath = $"{ServiceFolder}/{AssetName}{ScriptExtension}";
         private static readonly string ServiceNamespace = FolderToNamespace(ServiceFolder);
-
-        /// <summary>True once the action asset, its generated wrapper and the service file all exist.</summary>
-        internal static bool IsSetUp => File.Exists(AssetPath)
-            && File.Exists(WrapperPath)
-            && File.Exists(ServicePath);
 
         /// <summary>
         /// Creates the input action asset, its generated actions wrapper and the project input

@@ -8,6 +8,9 @@ namespace Base.PackageInstaller.Data
     internal static class BasePackageDefaults
     {
         private const string Attributes = "Attributes";
+
+        private const string BaseUrl =
+            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
         private const string Content = "Content";
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
@@ -21,9 +24,6 @@ namespace Base.PackageInstaller.Data
         private const string Tweening = "Tweening";
         private const string UI = "UI";
         private const string Utility = "Utility";
-
-        private const string BaseUrl =
-            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
 
         /// <summary>
         /// Creates a fresh copy of the default entries.

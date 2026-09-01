@@ -47,15 +47,15 @@ namespace Base.PackageInstaller.Operations
         internal event Action<OperationSummary> OnAllPackagesCompleted;
 
         /// <summary>
-        /// Indicates whether a package operation is currently running.
-        /// </summary>
-        internal bool IsRunning { get; private set; }
-
-        /// <summary>
         /// What this operation does to the packages it processes, stamped onto every result so the
         /// report can be worded without knowing which operation produced it.
         /// </summary>
         protected abstract EPackageAction Action { get; }
+
+        /// <summary>
+        /// Indicates whether a package operation is currently running.
+        /// </summary>
+        internal bool IsRunning { get; private set; }
 
         /// <summary>
         /// The key under which this operation's progress is persisted.
@@ -173,10 +173,10 @@ namespace Base.PackageInstaller.Operations
             _installed.Clear();
 
             _currentRequest = null;
-            _current = default;
+            _current = default(PackageRequest);
             _listRequest = null;
             _verifyRequest = null;
-            _pendingFailure = default;
+            _pendingFailure = default(PackageResult);
             _hasSnapshot = false;
 
             EditorApplication.update -= OnVerifyProgress;
@@ -293,7 +293,7 @@ namespace Base.PackageInstaller.Operations
                 ? BareSuccess()
                 : _pendingFailure;
 
-            _pendingFailure = default;
+            _pendingFailure = default(PackageResult);
 
             Complete(result);
         }
