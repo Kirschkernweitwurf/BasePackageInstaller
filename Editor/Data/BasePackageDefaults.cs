@@ -8,9 +8,6 @@ namespace Base.PackageInstaller.Data
     internal static class BasePackageDefaults
     {
         private const string Attributes = "Attributes";
-
-        private const string BaseUrl =
-            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
         private const string Content = "Content";
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
@@ -25,6 +22,9 @@ namespace Base.PackageInstaller.Data
         private const string UI = "UI";
         private const string Utility = "Utility";
 
+        private const string BaseUrl =
+            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
+
         /// <summary>
         /// Creates a fresh copy of the default entries.
         /// </summary>
@@ -36,11 +36,11 @@ namespace Base.PackageInstaller.Data
             new PackageEntry(ControllerSupport, $"{BaseUrl}ControllerSupport", Core),
             new PackageEntry(Core, $"{BaseUrl}Core", Tweening),
             new PackageEntry(EditorUi, $"{BaseUrl}EditorUi"),
-            new PackageEntry(Localization, $"{BaseUrl}Localization", Utility),
+            new PackageEntry(Localization, $"{BaseUrl}Localization", EditorUi, Utility),
             new PackageEntry(MemoryProfiler, $"{BaseUrl}MemoryProfiler", Core),
             new PackageEntry(SaveSystem, $"{BaseUrl}SaveSystem", Services),
             new PackageEntry(Services, $"{BaseUrl}Services", Attributes),
-            new PackageEntry(Settings, $"{BaseUrl}Settings", Core),
+            new PackageEntry(Settings, $"{BaseUrl}Settings", Tweening),
             new PackageEntry(Tools, $"{BaseUrl}Tools", Attributes),
             new PackageEntry(Tweening, $"{BaseUrl}Tweening", Services),
             new PackageEntry(UI, $"{BaseUrl}UI", Core),
