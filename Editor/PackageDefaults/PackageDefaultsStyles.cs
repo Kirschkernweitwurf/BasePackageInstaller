@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using Base.PackageInstaller.Shared;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +9,11 @@ namespace Base.PackageInstaller.PackageDefaults
     /// generated at runtime for the cards, pills and buttons. Rebuilds automatically when the editor
     /// skin changes and frees its textures on <see cref="Dispose"/>.
     /// </summary>
+    /// <remarks>
+    /// The shapes come from <see cref="InstallerStyleBuilder"/>, which the installer window draws from
+    /// as well. What stays here is which color goes on which control, plus the code font, which only
+    /// this window needs.
+    /// </remarks>
     internal sealed class PackageDefaultsStyles
     {
         /// <summary>The window title.</summary>
@@ -33,9 +38,7 @@ namespace Base.PackageInstaller.PackageDefaults
         internal GUIStyle Card { get; private set; }
 
         /// <summary>
-
         /// The panel the generated source sits in, darker so it reads as code rather than as content.
-
         /// </summary>
         internal GUIStyle CodeCard { get; private set; }
 
@@ -72,16 +75,22 @@ namespace Base.PackageInstaller.PackageDefaults
             "Courier New"
         };
 
-        private readonly List<Texture2D> _ownedTextures = new();
+        private readonly InstallerStyleBuilder _builder = new();
 
         private Font _ownedFont;
         private bool _built;
         private bool _builtForProSkin;
+        private int _builtForThemeRevision;
 
-        /// <summary>Rebuilds the styles only when needed (first use or a skin change).</summary>
+        /// <summary>
+        /// Rebuilds the styles only when needed: first use, a skin change, or a change to the shared
+        /// theme this window follows while the Editor UI package is installed.
+        /// </summary>
         internal void EnsureBuilt()
         {
-            if (_built && _builtForProSkin == EditorGUIUtility.isProSkin)
+            if (_built
+                && _builtForProSkin == EditorGUIUtility.isProSkin
+                && _builtForThemeRevision == EditorUiBridge.Revision)
                 return;
 
             Release();
@@ -89,45 +98,11 @@ namespace Base.PackageInstaller.PackageDefaults
 
             _built = true;
             _builtForProSkin = EditorGUIUtility.isProSkin;
+            _builtForThemeRevision = EditorUiBridge.Revision;
         }
 
-        /// <summary>Destroys the generated textures. Call when the owning window closes.</summary>
+        /// <summary>Destroys the generated textures and the code font. Call when the owning window closes.</summary>
         internal void Dispose() => Release();
-
-        private static Color ColorAt(Color color, int x, int y, int size, int radius)
-        {
-            // Distance from the pixel center to the nearest point of the rectangle inset by the
-            // radius. Inside that core the pixel is solid; near a corner it fades over one pixel.
-            float pointX = x + 0.5f;
-            float pointY = y + 0.5f;
-
-            float nearestX = Mathf.Clamp(pointX, radius, size - radius);
-            float nearestY = Mathf.Clamp(pointY, radius, size - radius);
-
-            float distance = Mathf.Sqrt(Square(pointX - nearestX) + Square(pointY - nearestY));
-            float coverage = Mathf.Clamp01(radius + 0.5f - distance);
-
-            return new Color(color.r, color.g, color.b, color.a * coverage);
-        }
-
-        private static Color Shift(Color color, float amount)
-            => new(color.r + amount, color.g + amount, color.b + amount, color.a);
-
-        // Labels inherit hover and active states from the editor skin, which makes plain text light up
-        // like a button. Pin every state to one color.
-        private static void PinTextColor(GUIStyle style, Color color)
-        {
-            style.normal.textColor = color;
-            style.hover.textColor = color;
-            style.active.textColor = color;
-            style.focused.textColor = color;
-        }
-
-        private static float Square(float value) => value * value;
-
-        private static RectOffset Uniform(int value) => new(value, value, value, value);
-
-        private static RectOffset HorizontalPadding(int value) => new(value, value, 0, 0);
 
         private void Build()
         {
@@ -145,7 +120,7 @@ namespace Base.PackageInstaller.PackageDefaults
                 fontSize = PackageDefaultsTheme.Metrics.TitleFontSize
             };
 
-            PinTextColor(Title, PackageDefaultsTheme.Palette.Title);
+            InstallerStyleBuilder.PinTextColor(Title, PackageDefaultsTheme.Palette.Title);
 
             Description = new GUIStyle(EditorStyles.label)
             {
@@ -153,41 +128,59 @@ namespace Base.PackageInstaller.PackageDefaults
                 wordWrap = true
             };
 
-            PinTextColor(Description, PackageDefaultsTheme.Palette.Description);
+            InstallerStyleBuilder.PinTextColor(Description, PackageDefaultsTheme.Palette.Description);
 
             SectionHeader = new GUIStyle(EditorStyles.boldLabel);
-            PinTextColor(SectionHeader, PackageDefaultsTheme.Palette.Title);
+            InstallerStyleBuilder.PinTextColor(SectionHeader, PackageDefaultsTheme.Palette.Title);
 
             RowLabel = new GUIStyle(EditorStyles.label)
             {
                 alignment = TextAnchor.MiddleLeft,
-                padding = HorizontalPadding(PackageDefaultsTheme.Metrics.CellPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(PackageDefaultsTheme.Metrics.CellPadding)
             };
 
-            PinTextColor(RowLabel, PackageDefaultsTheme.Palette.Title);
+            InstallerStyleBuilder.PinTextColor(RowLabel, PackageDefaultsTheme.Palette.Title);
 
             RowValue = new GUIStyle(EditorStyles.miniLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
-                padding = HorizontalPadding(PackageDefaultsTheme.Metrics.CellPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(PackageDefaultsTheme.Metrics.CellPadding)
             };
 
-            PinTextColor(RowValue, PackageDefaultsTheme.Palette.Description);
+            InstallerStyleBuilder.PinTextColor(RowValue, PackageDefaultsTheme.Palette.Description);
 
             Window = new GUIStyle
             {
-                padding = Uniform(PackageDefaultsTheme.Metrics.WindowPadding)
+                padding = InstallerStyleBuilder.Uniform(PackageDefaultsTheme.Metrics.WindowPadding)
             };
 
-            Card = RoundedStyle(PackageDefaultsTheme.Palette.Card,
-                PackageDefaultsTheme.Metrics.CardCornerRadius);
+            BuildCards();
 
-            Card.padding = Uniform(PackageDefaultsTheme.Metrics.CardPadding);
+            AddedGutter = GutterStyle(PackageDefaultsTheme.Palette.AddedText);
+            RemovedGutter = GutterStyle(PackageDefaultsTheme.Palette.RemovedText);
 
-            CodeCard = RoundedStyle(PackageDefaultsTheme.Palette.Code,
-                PackageDefaultsTheme.Metrics.CardCornerRadius);
+            OkPill = Pill(PackageDefaultsTheme.Palette.OkPill, PackageDefaultsTheme.Palette.OkText);
+            WarnPill = Pill(PackageDefaultsTheme.Palette.WarnPill, PackageDefaultsTheme.Palette.WarnText);
+            MutedPill = Pill(PackageDefaultsTheme.Palette.MutedPill, PackageDefaultsTheme.Palette.MutedText);
 
-            CodeCard.padding = Uniform(PackageDefaultsTheme.Metrics.CardPadding);
+            PrimaryButton = Button(PackageDefaultsTheme.Palette.Accent,
+                PackageDefaultsTheme.Palette.AccentText, FontStyle.Bold);
+
+            SecondaryButton = Button(PackageDefaultsTheme.Palette.Secondary,
+                PackageDefaultsTheme.Palette.SecondaryText, FontStyle.Normal);
+        }
+
+        private void BuildCards()
+        {
+            int radius = PackageDefaultsTheme.Metrics.CardCornerRadius;
+
+            // Each card gets its own RectOffset. GUIStyle keeps the instance it is handed, so sharing
+            // one between two styles would tie their padding together for good.
+            Card = _builder.RoundedStyle(PackageDefaultsTheme.Palette.Card, radius);
+            Card.padding = InstallerStyleBuilder.Uniform(PackageDefaultsTheme.Metrics.CardPadding);
+
+            CodeCard = _builder.RoundedStyle(PackageDefaultsTheme.Palette.Code, radius);
+            CodeCard.padding = InstallerStyleBuilder.Uniform(PackageDefaultsTheme.Metrics.CardPadding);
 
             Code = new GUIStyle(EditorStyles.label)
             {
@@ -195,23 +188,10 @@ namespace Base.PackageInstaller.PackageDefaults
                 alignment = TextAnchor.MiddleLeft,
                 wordWrap = false,
                 richText = false,
-                padding = HorizontalPadding(PackageDefaultsTheme.Metrics.CellPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(PackageDefaultsTheme.Metrics.CellPadding)
             };
 
-            PinTextColor(Code, PackageDefaultsTheme.Palette.CodeText);
-
-            AddedGutter = GutterStyle(PackageDefaultsTheme.Palette.AddedText);
-            RemovedGutter = GutterStyle(PackageDefaultsTheme.Palette.RemovedText);
-
-            OkPill = PillStyle(PackageDefaultsTheme.Palette.OkPill, PackageDefaultsTheme.Palette.OkText);
-            WarnPill = PillStyle(PackageDefaultsTheme.Palette.WarnPill, PackageDefaultsTheme.Palette.WarnText);
-            MutedPill = PillStyle(PackageDefaultsTheme.Palette.MutedPill, PackageDefaultsTheme.Palette.MutedText);
-
-            PrimaryButton = ButtonStyle(PackageDefaultsTheme.Palette.Accent,
-                PackageDefaultsTheme.Palette.AccentText, FontStyle.Bold);
-
-            SecondaryButton = ButtonStyle(PackageDefaultsTheme.Palette.Secondary,
-                PackageDefaultsTheme.Palette.SecondaryText, FontStyle.Normal);
+            InstallerStyleBuilder.PinTextColor(Code, PackageDefaultsTheme.Palette.CodeText);
         }
 
         private GUIStyle GutterStyle(Color color)
@@ -220,98 +200,26 @@ namespace Base.PackageInstaller.PackageDefaults
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold,
-                padding = Uniform(0)
+                padding = InstallerStyleBuilder.Uniform(0)
             };
 
-            PinTextColor(style, color);
+            InstallerStyleBuilder.PinTextColor(style, color);
 
             return style;
         }
 
-        private GUIStyle PillStyle(Color background, Color text)
-        {
-            GUIStyle style = RoundedStyle(background, PackageDefaultsTheme.Metrics.PillCornerRadius);
+        private GUIStyle Pill(Color background, Color text) => _builder.PillStyle(background, text,
+            PackageDefaultsTheme.Metrics.PillCornerRadius, PackageDefaultsTheme.Metrics.PillPaddingX,
+            PackageDefaultsTheme.Metrics.PillPaddingY);
 
-            style.alignment = TextAnchor.MiddleCenter;
-            style.fontStyle = FontStyle.Bold;
-            style.fontSize = EditorStyles.miniLabel.fontSize;
-            style.padding = new RectOffset(PackageDefaultsTheme.Metrics.PillPaddingX,
-                PackageDefaultsTheme.Metrics.PillPaddingX, PackageDefaultsTheme.Metrics.PillPaddingY,
-                PackageDefaultsTheme.Metrics.PillPaddingY);
-
-            style.normal.textColor = text;
-
-            return style;
-        }
-
-        private GUIStyle ButtonStyle(Color background, Color textColor, FontStyle fontStyle)
-        {
-            int radius = PackageDefaultsTheme.Metrics.CardCornerRadius;
-            GUIStyle style = RoundedStyle(background, radius);
-
-            style.alignment = TextAnchor.MiddleCenter;
-            style.fontStyle = fontStyle;
-
-            PinTextColor(style, textColor);
-
-            style.hover.background =
-                RoundedTexture(Shift(background, PackageDefaultsTheme.Metrics.HoverLift), radius);
-
-            style.active.background =
-                RoundedTexture(Shift(background, -PackageDefaultsTheme.Metrics.PressDrop), radius);
-
-            style.focused.background = style.normal.background;
-
-            return style;
-        }
-
-        private GUIStyle RoundedStyle(Color color, int radius)
-        {
-            GUIStyle style = new()
-            {
-                border = Uniform(radius)
-            };
-
-            style.normal.background = RoundedTexture(color, radius);
-
-            return style;
-        }
-
-        // A 9-sliced rounded rect texture: a (2r+1) square whose one pixel center stretches, so only the
-        // rounded corners are drawn at their true size regardless of the target rectangle.
-        private Texture2D RoundedTexture(Color color, int radius)
-        {
-            int size = radius * 2 + 1;
-
-            Texture2D texture = new(size, size, TextureFormat.RGBA32, false)
-            {
-                hideFlags = HideFlags.HideAndDontSave,
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp
-            };
-
-            Color[] pixels = new Color[size * size];
-
-            for (int index = 0; index < pixels.Length; index++)
-                pixels[index] = ColorAt(color, index % size, index / size, size, radius);
-
-            texture.SetPixels(pixels);
-            texture.Apply();
-
-            _ownedTextures.Add(texture);
-
-            return texture;
-        }
+        private GUIStyle Button(Color background, Color textColor, FontStyle fontStyle)
+            => _builder.ButtonStyle(background, textColor, fontStyle,
+                PackageDefaultsTheme.Metrics.CardCornerRadius, PackageDefaultsTheme.Metrics.HoverLift,
+                PackageDefaultsTheme.Metrics.PressDrop);
 
         private void Release()
         {
-            foreach (Texture2D texture in _ownedTextures)
-            {
-                if (texture != null)
-                    Object.DestroyImmediate(texture);
-            }
-
-            _ownedTextures.Clear();
+            _builder.Release();
 
             if (_ownedFont != null)
                 Object.DestroyImmediate(_ownedFont);

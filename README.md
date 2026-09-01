@@ -82,6 +82,11 @@ This exists because the installer cannot work the graph out at runtime. It has t
 needs before that package is anywhere on disk. Generating the list here and checking the result in
 keeps the asmdefs the single source of truth.
 
+The same run happens on its own the first time the project is opened, so the checked in file cannot
+quietly fall behind the asmdefs. It only writes when the result differs, only when the packages root
+exists, and never into the package cache, so a consuming project never sees it. The **Run On Project
+Open** toggle in the window turns it off.
+
 ## Project setup
 
 When the project has no input service yet, the window offers **Create ProjectInputService**. It creates `Assets/Input/PlayerInputActions.inputactions` (moving an existing action asset rather than creating a second one), turns on wrapper class generation for it, and writes `Assets/Generated/Input/ProjectInputService.cs` from a template. The button disappears once both files exist.

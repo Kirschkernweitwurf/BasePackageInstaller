@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using Base.PackageInstaller.Shared;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +9,11 @@ namespace Base.PackageInstaller.Window.Theme
     /// textures generated at runtime for the status pills, card and buttons. Rebuilds
     /// automatically when the editor skin changes and frees its textures on <see cref="Dispose"/>.
     /// </summary>
+    /// <remarks>
+    /// The shapes come from <see cref="InstallerStyleBuilder"/>, which the Package Defaults window
+    /// draws from as well. What stays here is which color goes on which control, since that is the
+    /// only part the two windows do not agree on.
+    /// </remarks>
     internal sealed class InstallerStyles
     {
         /// <summary>The window title.</summary>
@@ -27,18 +32,13 @@ namespace Base.PackageInstaller.Window.Theme
         internal GUIStyle RowLabel { get; private set; }
 
         /// <summary>
-
         /// A row another selected package drags in, dimmed so its locked toggle reads as deliberate.
-
         /// </summary>
         internal GUIStyle DimmedLabel { get; private set; }
 
         /// <summary>
-
         /// The holders column, drawn smaller and clipped with an ellipsis rather than pushing the other columns
-
         /// around.
-
         /// </summary>
         internal GUIStyle HeldColumnLabel { get; private set; }
 
@@ -52,9 +52,7 @@ namespace Base.PackageInstaller.Window.Theme
         internal GUIStyle NotInstalledPill { get; private set; }
 
         /// <summary>
-
         /// The placeholder in the status column while the install statuses are still being queried.
-
         /// </summary>
         internal GUIStyle CheckingLabel { get; private set; }
 
@@ -74,21 +72,25 @@ namespace Base.PackageInstaller.Window.Theme
         internal GUIStyle SegmentSelected { get; private set; }
 
         /// <summary>
-
         /// A transparent wrapper that keeps everything off the window edges. Nothing but an inset.
-
         /// </summary>
         internal GUIStyle WindowBody { get; private set; }
 
-        private readonly List<Texture2D> _ownedTextures = new();
+        private readonly InstallerStyleBuilder _builder = new();
 
         private bool _built;
         private bool _builtForProSkin;
+        private int _builtForThemeRevision;
 
-        /// <summary>Rebuilds the styles only when needed (first use or a skin change).</summary>
+        /// <summary>
+        /// Rebuilds the styles only when needed: first use, a skin change, or a change to the shared
+        /// theme this window follows while the Editor UI package is installed.
+        /// </summary>
         internal void EnsureBuilt()
         {
-            if (_built && _builtForProSkin == EditorGUIUtility.isProSkin)
+            if (_built
+                && _builtForProSkin == EditorGUIUtility.isProSkin
+                && _builtForThemeRevision == EditorUiBridge.Revision)
                 return;
 
             Release();
@@ -96,45 +98,11 @@ namespace Base.PackageInstaller.Window.Theme
 
             _built = true;
             _builtForProSkin = EditorGUIUtility.isProSkin;
+            _builtForThemeRevision = EditorUiBridge.Revision;
         }
 
         /// <summary>Destroys the generated textures. Call when the owning window closes.</summary>
         internal void Dispose() => Release();
-
-        private static Color ColorAt(Color color, int x, int y, int size, int radius)
-        {
-            // Distance from the pixel center to the nearest point of the rectangle inset by the
-            // radius. Inside that core the pixel is solid; near a corner it fades over one pixel.
-            float pointX = x + 0.5f;
-            float pointY = y + 0.5f;
-
-            float nearestX = Mathf.Clamp(pointX, radius, size - radius);
-            float nearestY = Mathf.Clamp(pointY, radius, size - radius);
-
-            float distance = Mathf.Sqrt(Square(pointX - nearestX) + Square(pointY - nearestY));
-            float coverage = Mathf.Clamp01(radius + 0.5f - distance);
-
-            return new Color(color.r, color.g, color.b, color.a * coverage);
-        }
-
-        private static Color Shift(Color color, float amount)
-            => new(color.r + amount, color.g + amount, color.b + amount, color.a);
-
-        // Labels inherit hover/active/focused states from the editor skin (white text in the dark
-        // skin), which makes plain text light up like a button. Pin every state to one color.
-        private static void PinTextColor(GUIStyle style, Color color)
-        {
-            style.normal.textColor = color;
-            style.hover.textColor = color;
-            style.active.textColor = color;
-            style.focused.textColor = color;
-        }
-
-        private static float Square(float value) => value * value;
-
-        private static RectOffset Uniform(int value) => new(value, value, value, value);
-
-        private static RectOffset HorizontalPadding(int value) => new(value, value, 0, 0);
 
         private static GUIStyle SegmentStyle(Color textColor, FontStyle fontStyle)
         {
@@ -142,10 +110,10 @@ namespace Base.PackageInstaller.Window.Theme
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = fontStyle,
-                border = Uniform(InstallerTheme.Metrics.CardCornerRadius)
+                border = InstallerStyleBuilder.Uniform(InstallerTheme.Metrics.CardCornerRadius)
             };
 
-            PinTextColor(style, textColor);
+            InstallerStyleBuilder.PinTextColor(style, textColor);
 
             return style;
         }
@@ -157,7 +125,7 @@ namespace Base.PackageInstaller.Window.Theme
                 fontSize = InstallerTheme.Metrics.TitleFontSize
             };
 
-            PinTextColor(Title, InstallerTheme.Palette.Title);
+            InstallerStyleBuilder.PinTextColor(Title, InstallerTheme.Palette.Title);
 
             Description = new GUIStyle(EditorStyles.label)
             {
@@ -165,31 +133,31 @@ namespace Base.PackageInstaller.Window.Theme
                 wordWrap = true
             };
 
-            PinTextColor(Description, InstallerTheme.Palette.Description);
+            InstallerStyleBuilder.PinTextColor(Description, InstallerTheme.Palette.Description);
 
             SectionHeader = new GUIStyle(EditorStyles.boldLabel);
-            PinTextColor(SectionHeader, InstallerTheme.Palette.Title);
+            InstallerStyleBuilder.PinTextColor(SectionHeader, InstallerTheme.Palette.Title);
 
             ColumnHeader = new GUIStyle(EditorStyles.miniBoldLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
-                padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
 
-            PinTextColor(ColumnHeader, InstallerTheme.Palette.Description);
+            InstallerStyleBuilder.PinTextColor(ColumnHeader, InstallerTheme.Palette.Description);
 
             RowLabel = new GUIStyle(EditorStyles.label)
             {
                 alignment = TextAnchor.MiddleLeft,
-                padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
 
-            PinTextColor(RowLabel, EditorStyles.label.normal.textColor);
+            InstallerStyleBuilder.PinTextColor(RowLabel, EditorStyles.label.normal.textColor);
 
             // A package another one depends on: same row, dimmed, so the locked toggle next to it
             // reads as deliberate rather than broken.
             DimmedLabel = new GUIStyle(RowLabel);
-            PinTextColor(DimmedLabel, InstallerTheme.Palette.Description);
+            InstallerStyleBuilder.PinTextColor(DimmedLabel, InstallerTheme.Palette.Description);
 
             // The list of holders is secondary information and can be long, so it is drawn smaller
             // and clipped with an ellipsis instead of pushing the other columns around.
@@ -197,149 +165,80 @@ namespace Base.PackageInstaller.Window.Theme
             {
                 alignment = TextAnchor.MiddleLeft,
                 clipping = TextClipping.Ellipsis,
-                padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
 
-            PinTextColor(HeldColumnLabel, InstallerTheme.Palette.Description);
+            InstallerStyleBuilder.PinTextColor(HeldColumnLabel, InstallerTheme.Palette.Description);
 
-            Card = RoundedStyle(InstallerTheme.Palette.Card, InstallerTheme.Metrics.CardCornerRadius);
+            Card = _builder.RoundedStyle(InstallerTheme.Palette.Card, InstallerTheme.Metrics.CardCornerRadius);
             Card.padding = new RectOffset(0, 0, InstallerTheme.Metrics.CardVerticalPadding,
                 InstallerTheme.Metrics.CardVerticalPadding);
 
-            InstalledPill = PillStyle(InstallerTheme.Palette.InstalledPill, InstallerTheme.Palette.InstalledText);
-            NotInstalledPill = PillStyle(InstallerTheme.Palette.NotInstalledPill,
+            InstalledPill = Pill(InstallerTheme.Palette.InstalledPill, InstallerTheme.Palette.InstalledText);
+            NotInstalledPill = Pill(InstallerTheme.Palette.NotInstalledPill,
                 InstallerTheme.Palette.NotInstalledText);
 
             CheckingLabel = new GUIStyle(EditorStyles.miniLabel)
             {
                 alignment = TextAnchor.MiddleLeft,
-                padding = HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
+                padding = InstallerStyleBuilder.HorizontalPadding(InstallerTheme.Metrics.CellTextPadding)
             };
 
-            PinTextColor(CheckingLabel, InstallerTheme.Palette.CheckingText);
+            InstallerStyleBuilder.PinTextColor(CheckingLabel, InstallerTheme.Palette.CheckingText);
 
-            PrimaryButton = ButtonStyle(InstallerTheme.Palette.Accent, InstallerTheme.Palette.AccentText,
+            PrimaryButton = Button(InstallerTheme.Palette.Accent, InstallerTheme.Palette.AccentText,
                 FontStyle.Bold);
 
-            SecondaryButton = ButtonStyle(InstallerTheme.Palette.Secondary, InstallerTheme.Palette.SecondaryText,
+            SecondaryButton = Button(InstallerTheme.Palette.Secondary, InstallerTheme.Palette.SecondaryText,
                 FontStyle.Normal);
 
-            // The rail is drawn with the same rounded corners as the card and the buttons, so the
-            // mode switch reads as part of the window rather than as an editor toolbar dropped in.
-            SegmentTrack = RoundedStyle(InstallerTheme.Palette.SegmentTrack,
-                InstallerTheme.Metrics.CardCornerRadius);
-
-            Segment = SegmentStyle(InstallerTheme.Palette.SecondaryText, FontStyle.Normal);
-            SegmentSelected = SegmentStyle(InstallerTheme.Palette.AccentText, FontStyle.Bold);
-
-            // Only the active segment is filled. The other one lets the rail show through, so the
-            // pair reads as one control with a highlight moving across it.
-            SegmentSelected.normal.background = RoundedTexture(InstallerTheme.Palette.Accent,
-                InstallerTheme.Metrics.CardCornerRadius);
-
-            SegmentSelected.hover.background = RoundedTexture(
-                Shift(InstallerTheme.Palette.Accent, InstallerTheme.Metrics.HoverLift),
-                InstallerTheme.Metrics.CardCornerRadius);
-
-            Segment.hover.background = RoundedTexture(InstallerTheme.Palette.SegmentHover,
-                InstallerTheme.Metrics.CardCornerRadius);
-
-            SegmentSelected.active.background = SegmentSelected.normal.background;
-            SegmentSelected.focused.background = SegmentSelected.normal.background;
-            Segment.active.background = Segment.hover.background;
+            BuildSegments();
 
             // Nothing but an inset. Every section inside keeps its own spacing, so this only stops
             // the content sitting flush against the window edges.
             WindowBody = new GUIStyle
             {
-                padding = Uniform(InstallerTheme.Metrics.WindowPadding)
+                padding = InstallerStyleBuilder.Uniform(InstallerTheme.Metrics.WindowPadding)
             };
         }
 
-        private GUIStyle PillStyle(Color background, Color text)
+        // The rail is drawn with the same rounded corners as the card and the buttons, so the mode
+        // switch reads as part of the window rather than as an editor toolbar dropped in. Only the
+        // active segment is filled; the other one lets the rail show through, so the pair reads as one
+        // control with a highlight moving across it.
+        private void BuildSegments()
         {
-            GUIStyle style = RoundedStyle(background, InstallerTheme.Metrics.PillCornerRadius);
+            int radius = InstallerTheme.Metrics.CardCornerRadius;
 
-            style.alignment = TextAnchor.MiddleCenter;
-            style.fontStyle = FontStyle.Bold;
-            style.fontSize = EditorStyles.miniLabel.fontSize;
-            style.padding = new RectOffset(InstallerTheme.Metrics.PillPaddingX, InstallerTheme.Metrics.PillPaddingX,
-                InstallerTheme.Metrics.PillPaddingY, InstallerTheme.Metrics.PillPaddingY);
+            SegmentTrack = _builder.RoundedStyle(InstallerTheme.Palette.SegmentTrack, radius);
 
-            style.normal.textColor = text;
+            Segment = SegmentStyle(InstallerTheme.Palette.SecondaryText, FontStyle.Normal);
+            SegmentSelected = SegmentStyle(InstallerTheme.Palette.AccentText, FontStyle.Bold);
 
-            return style;
+            SegmentSelected.normal.background = _builder.RoundedTexture(InstallerTheme.Palette.Accent, radius);
+
+            SegmentSelected.hover.background = _builder.RoundedTexture(
+                InstallerStyleBuilder.Shift(InstallerTheme.Palette.Accent, InstallerTheme.Metrics.HoverLift),
+                radius);
+
+            Segment.hover.background = _builder.RoundedTexture(InstallerTheme.Palette.SegmentHover, radius);
+
+            SegmentSelected.active.background = SegmentSelected.normal.background;
+            SegmentSelected.focused.background = SegmentSelected.normal.background;
+            Segment.active.background = Segment.hover.background;
         }
 
-        private GUIStyle ButtonStyle(Color background, Color textColor, FontStyle fontStyle)
-        {
-            const int radius = InstallerTheme.Metrics.CardCornerRadius;
-            GUIStyle style = RoundedStyle(background, radius);
+        private GUIStyle Pill(Color background, Color text) => _builder.PillStyle(background, text,
+            InstallerTheme.Metrics.PillCornerRadius, InstallerTheme.Metrics.PillPaddingX,
+            InstallerTheme.Metrics.PillPaddingY);
 
-            style.alignment = TextAnchor.MiddleCenter;
-            style.fontStyle = fontStyle;
-
-            style.normal.textColor = textColor;
-            style.hover.textColor = textColor;
-            style.active.textColor = textColor;
-            style.focused.textColor = textColor;
-
-            style.hover.background = RoundedTexture(Shift(background, InstallerTheme.Metrics.HoverLift), radius);
-            style.active.background = RoundedTexture(Shift(background, -InstallerTheme.Metrics.PressDrop), radius);
-            style.focused.background = style.normal.background;
-
-            return style;
-        }
-
-        private GUIStyle RoundedStyle(Color color, int radius)
-        {
-            GUIStyle style = new()
-            {
-                border = Uniform(radius),
-                normal =
-                {
-                    background = RoundedTexture(color, radius)
-                }
-            };
-
-            return style;
-        }
-
-        // A 9-sliced rounded-rect texture: a (2r+1) square whose 1px center stretches, so only the
-        // rounded corners are drawn at their true size regardless of the target rectangle.
-        private Texture2D RoundedTexture(Color color, int radius)
-        {
-            int size = radius * 2 + 1;
-
-            Texture2D texture = new(size, size, TextureFormat.RGBA32, false)
-            {
-                hideFlags = HideFlags.HideAndDontSave,
-                filterMode = FilterMode.Bilinear,
-                wrapMode = TextureWrapMode.Clamp
-            };
-
-            Color[] pixels = new Color[size * size];
-
-            for (int index = 0; index < pixels.Length; index++)
-                pixels[index] = ColorAt(color, index % size, index / size, size, radius);
-
-            texture.SetPixels(pixels);
-            texture.Apply();
-
-            _ownedTextures.Add(texture);
-
-            return texture;
-        }
+        private GUIStyle Button(Color background, Color textColor, FontStyle fontStyle)
+            => _builder.ButtonStyle(background, textColor, fontStyle, InstallerTheme.Metrics.CardCornerRadius,
+                InstallerTheme.Metrics.HoverLift, InstallerTheme.Metrics.PressDrop);
 
         private void Release()
         {
-            foreach (Texture2D texture in _ownedTextures)
-            {
-                if (texture != null)
-                    Object.DestroyImmediate(texture);
-            }
-
-            _ownedTextures.Clear();
+            _builder.Release();
             _built = false;
         }
     }
