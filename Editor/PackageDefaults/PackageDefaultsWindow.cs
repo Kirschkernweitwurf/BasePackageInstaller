@@ -23,10 +23,9 @@ namespace Base.PackageInstaller.PackageDefaults
     internal sealed class PackageDefaultsWindow : EditorWindow
     {
         private const string AddedPrefix = "+";
+        private const string AutoRunLabel = "Run On Project Open";
         private const string BrowseLabel = "Browse";
         private const string CopyLabel = "Copy to Clipboard";
-        private const string DefaultRoot =
-            @"C:\Users\maxte\GitHub\Unity\Base\BaseProjectPackages\BaseProject\Packages";
         private const string Description = "Reads every asmdef under the packages root, resolves the references "
             + "between packages and drops the edges another edge already implies. Optional assemblies behind a "
             + "define constraint and test assemblies are ignored, so they never become hard dependencies.";
@@ -46,21 +45,14 @@ namespace Base.PackageInstaller.PackageDefaults
         private const string NoDependencies = "none";
         private const string NoTargetMessage = "No target file selected";
         private const string OutputFileName = "BasePackageDefaults.cs";
-        private const string OutputPrefsKey = "Scripts.PackageDefaults.OutputPath";
-        private const string PackageCacheFolder = "Library/PackageCache";
-        private const char PathSeparator = '/';
         private const string PreviewTab = "Generated File";
         private const string RemovedPrefix = "-";
         private const string RootLabel = "Packages Root";
-        private const string RootPrefsKey = "Scripts.PackageDefaults.PackagesRoot";
         private const string SaveDialogTitle = "Save generated defaults";
         private const string ScanLabel = "Scan";
         private const string ScriptFilter = "cs";
-        private const string TargetAssetFilter = "BasePackageDefaults t:MonoScript";
-        private const string TargetAssetSuffix = "/BasePackageDefaults.cs";
         private const string TargetLabel = "Target File";
         private const string UpToDateMessage = "Nothing to write, the file is already up to date.";
-        private const char WindowsSeparator = '\\';
         private const string WindowTitle = "Package Defaults";
         private const string WriteLabel = "Write File";
 
@@ -86,13 +78,13 @@ namespace Base.PackageInstaller.PackageDefaults
         private void OnEnable()
         {
             // Remembered per machine, so the path constants are only the first-run fallback.
-            _root = EditorPrefs.GetString(RootPrefsKey, DefaultRoot);
-            _target = EditorPrefs.GetString(OutputPrefsKey, string.Empty);
+            _root = PackageDefaultsPaths.LoadRoot();
+            _target = PackageDefaultsPaths.LoadTarget();
 
             // Not persisted: a path found by searching should follow the project rather than
             // stick around after the installer moved. Only an explicit pick is remembered.
             if (string.IsNullOrEmpty(_target))
-                _target = LocateTarget();
+                _target = PackageDefaultsPaths.LocateTarget();
 
             Scan();
         }
@@ -143,44 +135,6 @@ namespace Base.PackageInstaller.PackageDefaults
             return string.Join(", ", package.DirectDependencies);
         }
 
-        /// <summary>
-        /// Looks the generated file up in the project so the target does not have to be picked
-        /// by hand on a fresh machine.
-        /// </summary>
-        /// <remarks>
-        /// A copy inside the package cache is ignored on purpose. That folder is rebuilt whenever
-        /// a Git package is resolved, so writing there looks like it worked and is gone next
-        /// import. Only a checked out or embedded copy is worth offering.
-        /// </remarks>
-        /// <returns>The absolute path of the file, or an empty string when it was not found.</returns>
-        private static string LocateTarget()
-        {
-            foreach (string guid in AssetDatabase.FindAssets(TargetAssetFilter))
-            {
-                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
-
-                if (!assetPath.EndsWith(TargetAssetSuffix, StringComparison.Ordinal))
-                    continue;
-
-                string fullPath = Path.GetFullPath(assetPath);
-
-                if (fullPath.Replace(WindowsSeparator, PathSeparator).Contains(PackageCacheFolder))
-                    continue;
-
-                return fullPath;
-            }
-
-            return string.Empty;
-        }
-
-        private static string ReadTarget(string path)
-        {
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return null;
-
-            return File.ReadAllText(path);
-        }
-
         private static Rect Reserve(float width, float height)
             => GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false));
 
@@ -202,7 +156,7 @@ namespace Base.PackageInstaller.PackageDefaults
                 if (EditorGUI.EndChangeCheck())
                 {
                     _root = root;
-                    EditorPrefs.SetString(RootPrefsKey, root);
+                    PackageDefaultsPaths.SaveRoot(root);
                 }
 
                 if (GUILayout.Button(ScanLabel, _styles.SecondaryButton,
@@ -227,6 +181,15 @@ namespace Base.PackageInstaller.PackageDefaults
                         GUILayout.Height(PackageDefaultsTheme.Metrics.InlineButtonHeight)))
                     Browse();
             }
+
+            EditorGUILayout.Space(PackageDefaultsTheme.Metrics.TightSpacing);
+
+            EditorGUI.BeginChangeCheck();
+
+            bool autoRun = EditorGUILayout.Toggle(AutoRunLabel, PackageDefaultsAutoRun.IsEnabled);
+
+            if (EditorGUI.EndChangeCheck())
+                PackageDefaultsAutoRun.IsEnabled = autoRun;
         }
 
         private void DrawStatus()
@@ -453,7 +416,8 @@ namespace Base.PackageInstaller.PackageDefaults
 
         private void RefreshDiff()
         {
-            _diff = TextDiff.Compare(_preview, ReadTarget(_target), !string.IsNullOrEmpty(_target));
+            _diff = TextDiff.Compare(_preview, PackageDefaultsFile.Read(_target),
+                hasTarget: !string.IsNullOrEmpty(_target));
 
             Repaint();
         }
@@ -462,7 +426,7 @@ namespace Base.PackageInstaller.PackageDefaults
         {
             _target = path;
 
-            EditorPrefs.SetString(OutputPrefsKey, path);
+            PackageDefaultsPaths.SaveTarget(path);
             RefreshDiff();
         }
 
@@ -496,7 +460,7 @@ namespace Base.PackageInstaller.PackageDefaults
                 return;
             }
 
-            File.WriteAllText(_target, _preview);
+            PackageDefaultsFile.Write(_target, _preview);
             RefreshDiff();
 
             Debug.Log($"{nameof(PackageDefaultsWindow)}: wrote {Path.GetFileName(_target)} "

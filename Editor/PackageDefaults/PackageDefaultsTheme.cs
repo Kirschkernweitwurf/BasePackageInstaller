@@ -1,3 +1,4 @@
+using Base.PackageInstaller.Shared;
 using UnityEditor;
 using UnityEngine;
 
@@ -7,6 +8,13 @@ namespace Base.PackageInstaller.PackageDefaults
     /// Single source of every spacing, size and color the Package Defaults window draws with, so the
     /// look can be tuned in one place and stays readable in both the dark and light editor skins.
     /// </summary>
+    /// <remarks>
+    /// Anything the Editor UI package also names is read from there through
+    /// <see cref="EditorUiBridge"/> once that package is installed, so this window follows the same
+    /// theme as every other Base window. The values written here are what it looks like on its own.
+    /// The four diff colors stay local on purpose: an added and a removed line have to read as green
+    /// and red against each other, which is a pairing no palette name carries.
+    /// </remarks>
     internal static class PackageDefaultsTheme
     {
         /// <summary>Pixel spacings, sizes and font sizes for the window layout.</summary>
@@ -14,23 +22,21 @@ namespace Base.PackageInstaller.PackageDefaults
         {
             /// <summary>Height of the footer buttons.</summary>
             internal const float ButtonHeight = 24f;
-            /// <summary>Corner radius of the cards, pills and buttons.</summary>
-            internal const int CardCornerRadius = 6;
+
             /// <summary>Inset of the content inside a card.</summary>
             internal const int CardPadding = 8;
+
             /// <summary>Inset of the text inside a table cell.</summary>
             internal const int CellPadding = 6;
+
             /// <summary>Share of the row the package name takes, leaving the rest to its dependencies.</summary>
             internal const float DependencyColumnSplit = 0.34f;
-            /// <summary>Font size of the paragraph under the window title.</summary>
-            internal const int DescriptionFontSize = 11;
+
             /// <summary>Width of the Copy and Write buttons in the footer.</summary>
             internal const float FooterButtonWidth = 130f;
+
             /// <summary>Width of the diff gutter that carries the plus and minus marks.</summary>
             internal const float GutterWidth = 18f;
-
-            /// <summary>How much a button background brightens while hovered.</summary>
-            internal const float HoverLift = 0.06f;
 
             /// <summary>Matches the height of the text field an inline button sits next to.</summary>
             internal const float InlineButtonHeight = 18f;
@@ -38,92 +44,129 @@ namespace Base.PackageInstaller.PackageDefaults
             /// <summary>Width of the Browse and Scan buttons that sit beside a text field.</summary>
             internal const float InlineButtonWidth = 70f;
 
-            /// <summary>Gap between two controls that belong together.</summary>
-            internal const float ItemSpacing = 8f;
             /// <summary>Smallest height the window may be resized to.</summary>
             internal const float MinimumHeight = 520f;
+
             /// <summary>Smallest width the window may be resized to. The diff needs the room.</summary>
             internal const float MinimumWidth = 720f;
-            /// <summary>Corner radius of a status pill, rounder than a card so it reads as a pill.</summary>
-            internal const int PillCornerRadius = 8;
-            /// <summary>Height of a status pill.</summary>
-            internal const float PillHeight = 18f;
+
             /// <summary>Inset left and right of the pill text.</summary>
             internal const int PillPaddingX = 8;
+
             /// <summary>Inset above and below the pill text.</summary>
             internal const int PillPaddingY = 2;
 
-            /// <summary>How much a button background darkens while pressed.</summary>
-            internal const float PressDrop = 0.08f;
-
-            /// <summary>Height of one row in the dependency table and the diff.</summary>
-            internal const float RowHeight = 20f;
             /// <summary>Width kept free for the vertical scroll bar, so a long line does not sit under it.</summary>
             internal const float ScrollBarAllowance = 16f;
-            /// <summary>Gap between two controls that sit close together.</summary>
-            internal const float TightSpacing = 4f;
-            /// <summary>Font size of the window title.</summary>
-            internal const int TitleFontSize = 15;
+
             /// <summary>Height of the tab strip.</summary>
             internal const float ToolbarHeight = 22f;
+
             /// <summary>Inset of everything from the window edges.</summary>
             internal const int WindowPadding = 10;
+
+            /// <summary>Corner radius of the cards, pills and buttons.</summary>
+            internal static int CardCornerRadius => EditorUiBridge.Metric("CardCornerRadius", 6);
+
+            /// <summary>Font size of the paragraph under the window title.</summary>
+            internal static int DescriptionFontSize => EditorUiBridge.Metric("DescriptionFontSize", 11);
+
+            /// <summary>How much a button background brightens while hovered.</summary>
+            internal static float HoverLift => EditorUiBridge.Metric("HoverLift", 0.06f);
+
+            /// <summary>Gap between two controls that belong together.</summary>
+            internal static float ItemSpacing => EditorUiBridge.Metric("ItemGap", 8f);
+
+            /// <summary>Corner radius of a status pill, rounder than a card so it reads as a pill.</summary>
+            internal static int PillCornerRadius => EditorUiBridge.Metric("PillCornerRadius", 8);
+
+            /// <summary>Height of a status pill.</summary>
+            internal static float PillHeight => EditorUiBridge.Metric("PillHeight", 18f);
+
+            /// <summary>How much a button background darkens while pressed.</summary>
+            internal static float PressDrop => EditorUiBridge.Metric("PressDrop", 0.08f);
+
+            /// <summary>Height of one row in the dependency table and the diff.</summary>
+            internal static float RowHeight => EditorUiBridge.Metric("RowHeight", 20f);
+
+            /// <summary>Gap between two controls that sit close together.</summary>
+            internal static float TightSpacing => EditorUiBridge.Metric("TightGap", 4f);
+
+            /// <summary>Font size of the window title.</summary>
+            internal static int TitleFontSize => EditorUiBridge.Metric("TitleFontSize", 15);
         }
 
         /// <summary>Palette with separate values for the dark (pro) and light editor skins.</summary>
         internal static class Palette
         {
             /// <summary>Text color of the window title and the section headers.</summary>
-            internal static Color Title => Pick(new Color(0.90f, 0.90f, 0.92f), new Color(0.13f, 0.13f, 0.15f));
+            internal static Color Title => EditorUiBridge.PaletteColor("Text",
+                Pick(new Color(0.90f, 0.90f, 0.92f), new Color(0.13f, 0.13f, 0.15f)));
 
             /// <summary>Text color of secondary text.</summary>
-            internal static Color Description => Pick(new Color(0.62f, 0.62f, 0.66f), new Color(0.38f, 0.38f, 0.42f));
+            internal static Color Description => EditorUiBridge.PaletteColor("DimText",
+                Pick(new Color(0.62f, 0.62f, 0.66f), new Color(0.38f, 0.38f, 0.42f)));
 
-            /// <summary>The one strong color, used by the primary button and the selected tab.</summary>
-            internal static Color Accent => Pick(new Color(0.32f, 0.60f, 0.94f), new Color(0.20f, 0.48f, 0.86f));
+            /// <summary>The one strong color, used by the primary button.</summary>
+            internal static Color Accent => EditorUiBridge.PaletteColor("Accent",
+                Pick(new Color(0.32f, 0.60f, 0.94f), new Color(0.20f, 0.48f, 0.86f)));
 
             /// <summary>Text drawn on top of the accent color.</summary>
-            internal static Color AccentText => Color.white;
+            internal static Color AccentText => EditorUiBridge.PaletteColor("AccentText", Color.white);
 
             /// <summary>Background of the secondary buttons.</summary>
-            internal static Color Secondary => Pick(new Color(0.30f, 0.30f, 0.33f), new Color(0.89f, 0.89f, 0.91f));
+            internal static Color Secondary => EditorUiBridge.PaletteColor("Secondary",
+                Pick(new Color(0.30f, 0.30f, 0.33f), new Color(0.89f, 0.89f, 0.91f)));
 
             /// <summary>Text drawn on top of the secondary color.</summary>
-            internal static Color SecondaryText => Pick(new Color(0.86f, 0.86f, 0.88f), new Color(0.18f, 0.18f, 0.20f));
+            internal static Color SecondaryText => EditorUiBridge.PaletteColor("SecondaryText",
+                Pick(new Color(0.86f, 0.86f, 0.88f), new Color(0.18f, 0.18f, 0.20f)));
 
             /// <summary>Background of a card.</summary>
-            internal static Color Card => Pick(new Color(0.22f, 0.22f, 0.24f), new Color(0.85f, 0.85f, 0.87f));
+            internal static Color Card => EditorUiBridge.PaletteColor("Card",
+                Pick(new Color(0.22f, 0.22f, 0.24f), new Color(0.85f, 0.85f, 0.87f)));
 
             /// <summary>
-
             /// Background of the card the generated source is shown in, darker than a plain card.
-
             /// </summary>
-            internal static Color Code => Pick(new Color(0.16f, 0.16f, 0.18f), new Color(0.96f, 0.96f, 0.97f));
+            internal static Color Code => EditorUiBridge.PaletteColor("Field",
+                Pick(new Color(0.16f, 0.16f, 0.18f), new Color(0.96f, 0.96f, 0.97f)));
 
             /// <summary>Text color of the generated source.</summary>
-            internal static Color CodeText => Pick(new Color(0.82f, 0.84f, 0.86f), new Color(0.15f, 0.16f, 0.18f));
+            internal static Color CodeText => EditorUiBridge.PaletteColor("Text",
+                Pick(new Color(0.82f, 0.84f, 0.86f), new Color(0.15f, 0.16f, 0.18f)));
 
             /// <summary>Overlay on every second row, which is what draws the zebra striping.</summary>
-            internal static Color RowStripe => Pick(new Color(1f, 1f, 1f, 0.03f), new Color(0f, 0f, 0f, 0.03f));
+            internal static Color RowStripe => EditorUiBridge.PaletteColor("Stripe",
+                Pick(new Color(1f, 1f, 1f, 0.03f), new Color(0f, 0f, 0f, 0.03f)));
 
             /// <summary>Background of the pill reporting that the file on disk is already up to date.</summary>
-            internal static Color OkPill => Pick(new Color(0.20f, 0.36f, 0.22f), new Color(0.80f, 0.93f, 0.81f));
+            internal static Color OkPill => EditorUiBridge.TableColor("OkBadgeColor",
+                Pick(new Color(0.20f, 0.36f, 0.22f), new Color(0.80f, 0.93f, 0.81f)));
 
             /// <summary>Text color of the up to date pill.</summary>
-            internal static Color OkText => Pick(new Color(0.55f, 0.88f, 0.58f), new Color(0.14f, 0.52f, 0.22f));
+            internal static Color OkText => EditorUiBridge.PaletteColor("Success",
+                Pick(new Color(0.55f, 0.88f, 0.58f), new Color(0.14f, 0.52f, 0.22f)));
 
             /// <summary>Background of the pill reporting that the file differs from what was scanned.</summary>
-            internal static Color WarnPill => Pick(new Color(0.40f, 0.33f, 0.16f), new Color(0.99f, 0.91f, 0.75f));
+            internal static Color WarnPill => EditorUiBridge.TableColor("WarningBadgeColor",
+                Pick(new Color(0.40f, 0.33f, 0.16f), new Color(0.99f, 0.91f, 0.75f)));
 
             /// <summary>Text color of the differs pill.</summary>
-            internal static Color WarnText => Pick(new Color(0.95f, 0.80f, 0.45f), new Color(0.51f, 0.36f, 0.05f));
+            internal static Color WarnText => EditorUiBridge.PaletteColor("Warning",
+                Pick(new Color(0.95f, 0.80f, 0.45f), new Color(0.51f, 0.36f, 0.05f)));
 
             /// <summary>Background of the pill reporting that nothing has been scanned yet.</summary>
-            internal static Color MutedPill => Pick(new Color(0.30f, 0.30f, 0.32f), new Color(0.88f, 0.88f, 0.90f));
+            internal static Color MutedPill => EditorUiBridge.TableColor("NeutralBadgeColor",
+                Pick(new Color(0.30f, 0.30f, 0.32f), new Color(0.88f, 0.88f, 0.90f)));
 
             /// <summary>Text color of the muted pill.</summary>
-            internal static Color MutedText => Pick(new Color(0.74f, 0.74f, 0.77f), new Color(0.40f, 0.40f, 0.44f));
+            internal static Color MutedText => EditorUiBridge.PaletteColor("DimText",
+                Pick(new Color(0.74f, 0.74f, 0.77f), new Color(0.40f, 0.40f, 0.44f)));
+
+            // The diff pairs stay local. An added and a removed line have to read as green against
+            // red at a glance, and a palette that retunes Success or Danger on its own would break
+            // that pairing without anything here noticing.
 
             /// <summary>Background of a diff line the generated file adds.</summary>
             internal static Color AddedRow => Pick(new Color(0.22f, 0.42f, 0.24f, 0.45f),
