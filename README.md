@@ -87,4 +87,10 @@ No Base package is required. This is the tool that installs them, so in a fresh 
 
 ## Why?
 
-I built this so I can spin up new Unity projects with my full stack in seconds. Feel free to use it for your own projects too.
+I built this so I can spin up new Unity projects with my full stack in seconds. You are welcome to use it in your own projects too.
+
+## License
+
+[PolyForm Shield 1.0.0](https://polyformproject.org/licenses/shield/1.0.0). Use it in whatever you
+build, including commercial work. The one thing it does not allow is building something that competes
+with these packages, so you cannot repackage them and sell them as your own library.
