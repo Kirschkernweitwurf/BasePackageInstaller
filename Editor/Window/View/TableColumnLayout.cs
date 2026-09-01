@@ -36,6 +36,7 @@ namespace Base.PackageInstaller.Window.View
             _savedNameWidth = EditorPrefs.GetFloat(NameWidthKey, InstallerTheme.Metrics.DefaultNameColumnWidth);
             _savedRequiredWidth = EditorPrefs.GetFloat(RequiredWidthKey,
                 InstallerTheme.Metrics.DefaultRequiredColumnWidth);
+
             _savedStatusWidth = EditorPrefs.GetFloat(StatusWidthKey, InstallerTheme.Metrics.DefaultStatusColumnWidth);
         }
 

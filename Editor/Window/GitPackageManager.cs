@@ -74,8 +74,15 @@ namespace Base.PackageInstaller.Window
 #endif
 
         // The Menu Manager lives in the Tools package, which this window is meant to install in the
-        // first place, so this is the one place a plain MenuItem is used instead of DynamicMenuItem.
-        private const string MenuPath = "Tools/" + WindowTitle;
+        // first place, so this is one of two places a plain MenuItem is used instead of DynamicMenuItem.
+        private const string MenuPath = MenuRoot + WindowTitle;
+
+        // Both installer windows sit under one submenu, so the Tools menu of a project that installed
+        // nothing else still reads as a list of tools rather than a list of this package's windows.
+        private const string MenuRoot = "Tools/Installer/";
+
+        // Negative, so the submenu sorts above whatever the Tools package adds later, and one step
+        // below Package Defaults so the two never swap places.
         private const int MenuPriority = -15;
 
         /// <summary>The window title, also used to label this window on other pages.</summary>

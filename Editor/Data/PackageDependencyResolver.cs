@@ -234,15 +234,13 @@ namespace Base.PackageInstaller.Data
 
         // Along the edge "entry needs dependency", the entry is what drags the dependency into an
         // install, and the dependency is what drags the entry into a removal.
-        private static int Holder(int entry, int dependency, EPackageMode mode)
-            => mode == EPackageMode.Install
-                ? entry
-                : dependency;
+        private static int Holder(int entry, int dependency, EPackageMode mode) => mode == EPackageMode.Install
+            ? entry
+            : dependency;
 
-        private static int Held(int entry, int dependency, EPackageMode mode)
-            => mode == EPackageMode.Install
-                ? dependency
-                : entry;
+        private static int Held(int entry, int dependency, EPackageMode mode) => mode == EPackageMode.Install
+            ? dependency
+            : entry;
 
         private static bool DependsOnDoomed(PackageEntry entry, IReadOnlyDictionary<string, int> byName,
             bool[] doomed)
