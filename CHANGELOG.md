@@ -4,6 +4,17 @@ All notable changes to this package. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions are the ones this package
 actually shipped under, read back from `package.json` at each commit that changed it.
 
+## [1.4.4] - 2026-09-02
+
+### Added
+
+- An editor test suite for the dependency graph. Covers the effective selection in both directions,
+  with expansion on and off, the install and removal order, the packages a removal leaves behind
+  broken, and every registry validation rule.
+- A check on the shipped defaults themselves: they have to validate, name only dependencies the list
+  holds, and resolve into an install order that satisfies every edge. A bad generation run is caught
+  here rather than in a project that has already installed it.
+
 ## [1.3.8] - 2026-08-25
 
 ### Changed
