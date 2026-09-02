@@ -107,7 +107,7 @@ The default registry contains the fourteen packages of the [BaseProjectPackages]
 - Unity `6000.3` or newer
 - `com.unity.inputsystem` `1.19.0`, for the project input setup
 
-No Base package is required. This is the tool that installs them, so in a fresh project it has to compile before any of them exists, which is why it carries its own theme and table code rather than using `Base.EditorUiPackage`.
+No Base package is required. This is the tool that installs them, so in a fresh project it has to compile before any of them exists, which is why it carries its own theme and table code rather than using `Base.EditorUIPackage.Editor`.
 
 ## Why?
 

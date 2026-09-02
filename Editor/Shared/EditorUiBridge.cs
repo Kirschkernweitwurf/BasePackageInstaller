@@ -27,18 +27,18 @@ namespace Base.PackageInstaller.Shared
     /// boxing on that path is the kind of cost that only shows up on someone else's machine.
     /// </para>
     /// </remarks>
-    internal static class EditorUiBridge
+    internal static class EditorUIBridge
     {
-        private const string Assembly = ", Base.EditorUiPackage";
-        private const string MetricsTypeName = "Base.EditorUiPackage.EditorMetrics" + Assembly;
+        private const string Assembly = ", Base.EditorUIPackage.Editor";
+        private const string MetricsTypeName = "Base.EditorUIPackage.Editor.EditorMetrics" + Assembly;
         private const string MissingMemberFormat
             = "{0}: the Editor UI package has no {1}.{2}, so the installer is using its own value. "
             + "The package is installed but its palette moved, which means this bridge needs updating.";
 
-        private const string PaletteTypeName = "Base.EditorUiPackage.EditorPalette" + Assembly;
-        private const string ProviderTypeName = "Base.EditorUiPackage.EditorThemeProvider" + Assembly;
+        private const string PaletteTypeName = "Base.EditorUIPackage.Editor.EditorPalette" + Assembly;
+        private const string ProviderTypeName = "Base.EditorUIPackage.Editor.EditorThemeProvider" + Assembly;
         private const string RevisionMemberName = "Revision";
-        private const string TableTypeName = "Base.EditorUiPackage.EditorTableStyles" + Assembly;
+        private const string TableTypeName = "Base.EditorUIPackage.Editor.EditorTableStyles" + Assembly;
 
         private static readonly Dictionary<string, Func<Color>> ColorGetters = new();
         private static readonly Dictionary<string, Func<float>> FloatGetters = new();
@@ -151,7 +151,7 @@ namespace Base.PackageInstaller.Shared
             if (!Reported.Add(key))
                 return;
 
-            Debug.LogWarning(string.Format(MissingMemberFormat, nameof(EditorUiBridge), owner.Name, member));
+            Debug.LogWarning(string.Format(MissingMemberFormat, nameof(EditorUIBridge), owner.Name, member));
         }
     }
 }
