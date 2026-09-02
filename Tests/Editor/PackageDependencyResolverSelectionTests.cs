@@ -18,9 +18,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>Ticking an entry pulls in everything it needs, all the way down the chain.</summary>
         [Test]
-        public void Install_PullsInTransitiveDependencies()
+        public void AnInstallPullsInTransitiveDependencies()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, A),
                 EPackageMode.Install, expandDependencies: true);
@@ -33,9 +33,9 @@ namespace Base.PackageInstaller.Tests
         /// in rather than leaving it behind.
         /// </summary>
         [Test]
-        public void Install_DerivesTheSelectionFromThePicksAlone()
+        public void AnInstallDerivesTheSelectionFromThePicksAlone()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, D),
                 EPackageMode.Install, expandDependencies: true);
@@ -45,9 +45,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A released entry stays in when another pick still needs it.</summary>
         [Test]
-        public void Install_KeepsWhatAnotherPickStillNeeds()
+        public void AnInstallKeepsWhatAnotherPickStillNeeds()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, B, D),
                 EPackageMode.Install, expandDependencies: true);
@@ -57,7 +57,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A dependency naming an entry the registry does not hold is ignored.</summary>
         [Test]
-        public void Install_IgnoresUnknownDependencies()
+        public void AnInstallIgnoresUnknownDependencies()
         {
             PackageEntry[] packages = { TestPackages.Entry(Standalone, Unknown) };
 
@@ -69,7 +69,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An entry listing itself neither selects twice nor claims to hold itself.</summary>
         [Test]
-        public void Install_IgnoresSelfDependency()
+        public void AnInstallIgnoresAnEntryListingItself()
         {
             PackageEntry[] packages = { TestPackages.Entry(A, A) };
             string[] heldBy = new string[packages.Length];
@@ -83,9 +83,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>Removing an entry pulls in everything that would not compile without it.</summary>
         [Test]
-        public void Uninstall_PullsInDependents()
+        public void ARemovalPullsInDependents()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, C),
                 EPackageMode.Uninstall, expandDependencies: true);
@@ -95,9 +95,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A removal leaves alone what does not depend on the pick.</summary>
         [Test]
-        public void Uninstall_LeavesUnrelatedEntriesAlone()
+        public void ARemovalLeavesUnrelatedEntriesAlone()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, B),
                 EPackageMode.Uninstall, expandDependencies: true);
@@ -107,9 +107,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>Removing reverses what the column means, so a row names what it requires.</summary>
         [Test]
-        public void Uninstall_HeldByNamesWhatTheRowRequires()
+        public void ARemovalNamesWhatTheRowRequires()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
             string[] heldBy = new string[packages.Length];
 
             TestPackages.Resolve(packages, TestPackages.Flags(packages, C), EPackageMode.Uninstall,
@@ -120,9 +120,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>With expansion off the picks are taken exactly as they are.</summary>
         [Test]
-        public void WithoutExpansion_TakesThePicksExactly()
+        public void WithoutExpansionThePicksAreTakenExactly()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, A),
                 EPackageMode.Install, expandDependencies: false);
@@ -132,9 +132,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>With expansion off the holders are still reported, so the window can still warn.</summary>
         [Test]
-        public void WithoutExpansion_StillReportsWhatThePickWouldPullIn()
+        public void WithoutExpansionTheHoldersAreStillReported()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
             string[] heldBy = new string[packages.Length];
 
             TestPackages.Resolve(packages, TestPackages.Flags(packages, A), EPackageMode.Install,
@@ -145,9 +145,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A row held by more than one pick names all of them.</summary>
         [Test]
-        public void HeldBy_NamesEveryHolderOfARow()
+        public void ARowHeldBySeveralPicksNamesAllOfThem()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
             string[] heldBy = new string[packages.Length];
 
             TestPackages.Resolve(packages, TestPackages.Flags(packages, A, D), EPackageMode.Install,
@@ -158,16 +158,8 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A missing registry is ignored rather than throwing.</summary>
         [Test]
-        public void NullRegistry_IsIgnored() => Assert.DoesNotThrow(() => PackageDependencyResolver.Resolve(
+        public void AMissingRegistryIsIgnored() => Assert.DoesNotThrow(() => PackageDependencyResolver.Resolve(
             null, null, null, null, EPackageMode.Install, expandDependencies: true));
 
-        // A needs B, B needs C, and D needs C as well, so C is the one two picks can hold at once.
-        private static PackageEntry[] Registry() => new[]
-        {
-            TestPackages.Entry(A, B),
-            TestPackages.Entry(B, C),
-            TestPackages.Entry(C),
-            TestPackages.Entry(D, C)
-        };
     }
 }

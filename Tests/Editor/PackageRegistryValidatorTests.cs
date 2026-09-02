@@ -17,7 +17,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A sound registry reports nothing.</summary>
         [Test]
-        public void SoundRegistry_ReportsNothing()
+        public void ASoundRegistryReportsNothing()
         {
             PackageEntry[] packages =
             {
@@ -30,7 +30,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A nameless entry is reported once, however many of them there are.</summary>
         [Test]
-        public void MissingName_IsReportedOnce()
+        public void ANamelessEntryIsReportedOnce()
         {
             PackageEntry[] packages =
             {
@@ -43,7 +43,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An entry without a URL is reported.</summary>
         [Test]
-        public void MissingUrl_IsReported()
+        public void AnEntryWithoutAUrlIsReported()
         {
             PackageEntry[] packages = { new(A, string.Empty) };
 
@@ -52,7 +52,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>Two entries sharing a name are reported, because only one of them is ever used.</summary>
         [Test]
-        public void DuplicateName_IsReported()
+        public void TwoEntriesSharingANameAreReported()
         {
             PackageEntry[] packages =
             {
@@ -65,7 +65,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An entry listing itself is reported once, and not a second time as a cycle.</summary>
         [Test]
-        public void SelfDependency_IsReportedOnce()
+        public void AnEntryListingItselfIsReportedOnce()
         {
             PackageEntry[] packages = { TestPackages.Entry(A, A) };
 
@@ -74,7 +74,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A dependency naming an entry that does not exist is reported.</summary>
         [Test]
-        public void UnknownDependency_IsReported()
+        public void ADependencyOnNothingIsReported()
         {
             PackageEntry[] packages = { TestPackages.Entry(A, Unknown) };
 
@@ -83,7 +83,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>Two entries depending on each other are reported once, not once per direction.</summary>
         [Test]
-        public void TwoPackageCycle_IsReportedOnce()
+        public void ATwoEntryCycleIsReportedOnce()
         {
             PackageEntry[] packages =
             {
@@ -96,7 +96,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A cycle running through a third entry is reported once as well.</summary>
         [Test]
-        public void LongerCycle_IsReportedOnce()
+        public void ALongerCycleIsReportedOnce()
         {
             PackageEntry[] packages =
             {
@@ -110,11 +110,11 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An empty registry reports nothing.</summary>
         [Test]
-        public void EmptyRegistry_ReportsNothing() =>
+        public void AnEmptyRegistryReportsNothing() =>
             Assert.That(PackageRegistryValidator.Validate(Array.Empty<PackageEntry>()), Is.Empty);
 
         /// <summary>A missing registry reports nothing rather than throwing.</summary>
         [Test]
-        public void NullRegistry_ReportsNothing() => Assert.That(PackageRegistryValidator.Validate(null), Is.Empty);
+        public void AMissingRegistryReportsNothing() => Assert.That(PackageRegistryValidator.Validate(null), Is.Empty);
     }
 }

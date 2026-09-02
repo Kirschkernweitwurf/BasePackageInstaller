@@ -10,8 +10,39 @@ namespace Base.PackageInstaller.Tests
     /// </summary>
     internal static class TestPackages
     {
+        /// <summary>The entry at the top of the chain, which nothing else depends on.</summary>
+        internal const string A = "A";
+
+        /// <summary>The entry in the middle of the chain.</summary>
+        internal const string B = "B";
+
+        /// <summary>The entry at the bottom, which two others reach.</summary>
+        internal const string C = "C";
+
+        /// <summary>A second entry depending on the bottom of the chain by a separate route.</summary>
+        internal const string D = "D";
+
+        /// <summary>An entry with no dependencies in either direction.</summary>
+        internal const string Standalone = "E";
+
+        /// <summary>A name no registry in these tests holds.</summary>
+        internal const string Unknown = "Missing";
+
         private const string UrlPrefix = "https://example.com/";
         private const string Version = "1.0.0";
+
+        /// <summary>
+        /// The registry most tests run against: A needs B, B needs C, and D needs C as well, so the
+        /// bottom of the chain is reached by two routes, one of them only through another entry.
+        /// </summary>
+        /// <returns>The registry entries.</returns>
+        internal static PackageEntry[] Chain() => new[]
+        {
+            Entry(A, B),
+            Entry(B, C),
+            Entry(C),
+            Entry(D, C)
+        };
 
         /// <summary>Creates an entry with a URL generated from its name.</summary>
         /// <param name="name">The entry name.</param>
@@ -45,8 +76,8 @@ namespace Base.PackageInstaller.Tests
         {
             bool[] flags = new bool[packages.Length];
 
-            for (int i = 0; i < flags.Length; i++)
-                flags[i] = true;
+            for (int index = 0; index < flags.Length; index++)
+                flags[index] = true;
 
             return flags;
         }
@@ -97,10 +128,10 @@ namespace Base.PackageInstaller.Tests
         {
             List<string> names = new();
 
-            for (int i = 0; i < packages.Length; i++)
+            for (int index = 0; index < packages.Length; index++)
             {
-                if (flags[i])
-                    names.Add(packages[i].Name);
+                if (flags[index])
+                    names.Add(packages[index].Name);
             }
 
             return names.ToArray();
@@ -132,10 +163,10 @@ namespace Base.PackageInstaller.Tests
         {
             PackageStatus[] statuses = new PackageStatus[packages.Length];
 
-            for (int i = 0; i < packages.Length; i++)
+            for (int index = 0; index < packages.Length; index++)
             {
-                statuses[i] = installed[i]
-                    ? new PackageStatus(true, packages[i].Name, Version)
+                statuses[index] = installed[index]
+                    ? new PackageStatus(true, packages[index].Name, Version)
                     : default;
             }
 
@@ -144,10 +175,10 @@ namespace Base.PackageInstaller.Tests
 
         private static int IndexOf(PackageEntry[] packages, string name)
         {
-            for (int i = 0; i < packages.Length; i++)
+            for (int index = 0; index < packages.Length; index++)
             {
-                if (packages[i].Name == name)
-                    return i;
+                if (packages[index].Name == name)
+                    return index;
             }
 
             throw new KeyNotFoundException($"The test registry has no entry named {name}.");

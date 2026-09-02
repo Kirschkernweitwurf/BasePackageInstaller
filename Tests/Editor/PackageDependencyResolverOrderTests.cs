@@ -17,9 +17,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An install starts at the leaves, so every package finds what it needs present.</summary>
         [Test]
-        public void Install_PutsDependenciesBeforeDependents()
+        public void AnInstallPutsDependenciesBeforeDependents()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A, B, C), EPackageMode.Install);
@@ -29,9 +29,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A removal is the install order reversed, so nothing goes while it is still needed.</summary>
         [Test]
-        public void Uninstall_ReversesTheInstallOrder()
+        public void ARemovalReversesTheInstallOrder()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A, B, C), EPackageMode.Uninstall);
@@ -46,7 +46,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void OnlyDependenciesInsideTheRunHoldAnEntryBack()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A), EPackageMode.Install);
@@ -56,7 +56,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A cycle cannot be ordered, so the run falls back to list order instead of stalling.</summary>
         [Test]
-        public void Cycle_FallsBackToListOrder()
+        public void ACycleFallsBackToListOrder()
         {
             PackageEntry[] packages =
             {
@@ -72,7 +72,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An entry listing itself does not wait for itself.</summary>
         [Test]
-        public void SelfDependency_DoesNotStall()
+        public void AnEntryListingItselfDoesNotStall()
         {
             PackageEntry[] packages = { TestPackages.Entry(A, A) };
 
@@ -84,9 +84,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An empty selection produces an empty run.</summary>
         [Test]
-        public void EmptySelection_ProducesNothing()
+        public void AnEmptySelectionProducesNothing()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages, new bool[packages.Length],
                 EPackageMode.Install);
@@ -96,16 +96,8 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A missing registry produces an empty run rather than throwing.</summary>
         [Test]
-        public void NullRegistry_ProducesNothing() =>
+        public void AMissingRegistryProducesNothing() =>
             Assert.That(PackageDependencyResolver.ResolveOrder(null, null, EPackageMode.Install), Is.Empty);
 
-        // A needs B, B needs C, and D needs C as well.
-        private static PackageEntry[] Registry() => new[]
-        {
-            TestPackages.Entry(A, B),
-            TestPackages.Entry(B, C),
-            TestPackages.Entry(C),
-            TestPackages.Entry(D, C)
-        };
     }
 }
