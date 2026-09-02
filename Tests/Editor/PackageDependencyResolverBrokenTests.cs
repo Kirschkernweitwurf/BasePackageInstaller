@@ -19,7 +19,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void NamesEveryInstalledDependentLeftBehind()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<string> broken = PackageDependencyResolver.FindBroken(packages,
                 TestPackages.Flags(packages, C), TestPackages.AllStatuses(packages));
@@ -31,7 +31,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void IgnoresPackagesThatAreNotInstalled()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<string> broken = PackageDependencyResolver.FindBroken(packages,
                 TestPackages.Flags(packages, C), TestPackages.Statuses(packages, B, C));
@@ -43,7 +43,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void ReportsNothingWhenTheWholeChainGoes()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<string> broken = PackageDependencyResolver.FindBroken(packages, TestPackages.AllFlags(packages),
                 TestPackages.AllStatuses(packages));
@@ -55,7 +55,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void ReportsNothingWhenNothingDependsOnTheRemoval()
         {
-            PackageEntry[] packages = Registry();
+            PackageEntry[] packages = TestPackages.Chain();
 
             List<string> broken = PackageDependencyResolver.FindBroken(packages,
                 TestPackages.Flags(packages, A), TestPackages.AllStatuses(packages));
@@ -65,17 +65,8 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A missing registry reports nothing rather than throwing.</summary>
         [Test]
-        public void NullRegistry_ReportsNothing() =>
+        public void AMissingRegistryReportsNothing() =>
             Assert.That(PackageDependencyResolver.FindBroken(null, null, null), Is.Empty);
 
-        // A needs B, B needs C, and D needs C as well, so removing C reaches three packages by two
-        // routes, one of them only through another package.
-        private static PackageEntry[] Registry() => new[]
-        {
-            TestPackages.Entry(A, B),
-            TestPackages.Entry(B, C),
-            TestPackages.Entry(C),
-            TestPackages.Entry(D, C)
-        };
     }
 }
