@@ -11,12 +11,12 @@ namespace Base.PackageInstaller.Data
         private const string Content = "Content";
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
-        private const string EditorUi = "Editor UI";
+        private const string EditorUI = "Editor UI";
         private const string Localization = "Localization";
         private const string MemoryProfiler = "Memory Profiler";
         private const string SaveSystem = "Save System";
         private const string Services = "Services";
-        private const string Settings = "Settings System";
+        private const string Settings = "Settings";
         private const string Tools = "Tools";
         private const string Tweening = "Tweening";
         private const string UI = "UI";
@@ -31,12 +31,12 @@ namespace Base.PackageInstaller.Data
         /// <returns>The default package entries.</returns>
         internal static PackageEntry[] Create() => new[]
         {
-            new PackageEntry(Attributes, $"{BaseUrl}Attributes", EditorUi, Utility),
+            new PackageEntry(Attributes, $"{BaseUrl}Attributes", EditorUI, Utility),
             new PackageEntry(Content, $"{BaseUrl}Content", ControllerSupport, SaveSystem, Settings, UI),
             new PackageEntry(ControllerSupport, $"{BaseUrl}ControllerSupport", Core),
             new PackageEntry(Core, $"{BaseUrl}Core", Tweening),
-            new PackageEntry(EditorUi, $"{BaseUrl}EditorUi"),
-            new PackageEntry(Localization, $"{BaseUrl}Localization", EditorUi, Utility),
+            new PackageEntry(EditorUI, $"{BaseUrl}EditorUI"),
+            new PackageEntry(Localization, $"{BaseUrl}Localization", EditorUI, Utility),
             new PackageEntry(MemoryProfiler, $"{BaseUrl}MemoryProfiler", Core),
             new PackageEntry(SaveSystem, $"{BaseUrl}SaveSystem", Services),
             new PackageEntry(Services, $"{BaseUrl}Services", Attributes),

@@ -90,7 +90,7 @@ namespace Base.PackageInstaller.PackageDefaults
         {
             if (_built
                 && _builtForProSkin == EditorGUIUtility.isProSkin
-                && _builtForThemeRevision == EditorUiBridge.Revision)
+                && _builtForThemeRevision == EditorUIBridge.Revision)
                 return;
 
             Release();
@@ -98,7 +98,7 @@ namespace Base.PackageInstaller.PackageDefaults
 
             _built = true;
             _builtForProSkin = EditorGUIUtility.isProSkin;
-            _builtForThemeRevision = EditorUiBridge.Revision;
+            _builtForThemeRevision = EditorUIBridge.Revision;
         }
 
         /// <summary>Destroys the generated textures and the code font. Call when the owning window closes.</summary>

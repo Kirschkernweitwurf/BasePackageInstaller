@@ -46,13 +46,17 @@ namespace Base.PackageInstaller.Data
         /// changed defaults appear without discarding project-specific entries. Matches by
         /// name: adds any missing default and replaces an existing default whose URL or
         /// dependencies changed.
+        /// <para>
+        /// Names stored under a name the installer has since renamed are carried forward first,
+        /// through <see cref="LegacyPackageNames"/>, so the rename does not read as a new package.
+        /// </para>
         /// </summary>
         /// <returns><c>true</c> when the registry changed and was saved.</returns>
         internal bool SyncWithDefaults()
         {
             EnsureSeeded();
 
-            bool changed = false;
+            bool changed = ApplyLegacyRenames();
 
             foreach (PackageEntry defaultEntry in BasePackageDefaults.Create())
             {
@@ -91,6 +95,61 @@ namespace Base.PackageInstaller.Data
 
             seeded = true;
             Save(true);
+        }
+
+        /// <summary>
+        /// Rewrites every entry and every dependency still stored under a renamed name, so a
+        /// renamed default updates the row a project already holds instead of adding a second one.
+        /// </summary>
+        /// <returns><c>true</c> when at least one entry was rewritten or dropped.</returns>
+        private bool ApplyLegacyRenames()
+        {
+            bool changed = false;
+
+            for (int i = 0; i < packages.Count; i++)
+            {
+                PackageEntry entry = packages[i];
+                string name = LegacyPackageNames.Resolve(entry.Name);
+                string[] dependsOn = entry.DependsOn;
+                string[] renamed = new string[dependsOn.Length];
+
+                for (int j = 0; j < dependsOn.Length; j++)
+                    renamed[j] = LegacyPackageNames.Resolve(dependsOn[j]);
+
+                if (name == entry.Name
+                    && renamed.SequenceEqual(dependsOn))
+                    continue;
+
+                packages[i] = new PackageEntry(name, entry.Url, renamed);
+                changed = true;
+            }
+
+            bool removed = RemoveDuplicateEntries();
+
+            return changed || removed;
+        }
+
+        /// <summary>
+        /// Drops entries a rename left sharing a name with an earlier one, keeping the first. Only
+        /// reachable in a project that had already added an entry under the new name by hand.
+        /// </summary>
+        /// <returns><c>true</c> when at least one entry was dropped.</returns>
+        private bool RemoveDuplicateEntries()
+        {
+            HashSet<string> seen = new();
+            bool changed = false;
+
+            for (int i = 0; i < packages.Count; i++)
+            {
+                if (seen.Add(packages[i].Name))
+                    continue;
+
+                packages.RemoveAt(i);
+                i--;
+                changed = true;
+            }
+
+            return changed;
         }
     }
 }

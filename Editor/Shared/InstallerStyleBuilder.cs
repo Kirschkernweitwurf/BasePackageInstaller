@@ -9,7 +9,7 @@ namespace Base.PackageInstaller.Shared
     /// the textures generated for them.
     /// </summary>
     /// <remarks>
-    /// The installer cannot depend on the EditorUi package, since it has to compile in a project where
+    /// The installer cannot depend on the EditorUI package, since it has to compile in a project where
     /// no Base package is installed yet. That is why it carries its own look, and it is also why this
     /// exists: the reason applies once, not once per window.
     /// <para>
