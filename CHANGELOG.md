@@ -4,6 +4,19 @@ All notable changes to this package. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions are the ones this package
 actually shipped under, read back from `package.json` at each commit that changed it.
 
+## [1.4.7] - 2026-09-06
+
+### Added
+
+- The shipped defaults are checked against the packages the project actually holds, on both halves
+  of what a dependency means. The assembly definitions are one half and break loudly at compile
+  time; the serialized assets are the other and break quietly, since a prefab holding a component
+  from a package that was never installed opens with a missing script and loses it the moment it is
+  saved. Reading the installed packages rather than the source repository means this shares no code
+  with the generator, so a fault in the scanner is caught rather than written out.
+- Packages are read from the package list rather than from the assembly definitions, so a package
+  that ships only assets is seen too. `Base Content` was invisible to the whole suite before.
+
 ## [1.4.4] - 2026-09-02
 
 ### Added
