@@ -317,11 +317,7 @@ namespace Base.PackageInstaller.Tests
         /// </summary>
         private HashSet<string> Closure(string package)
         {
-            HashSet<string> reached = new(StringComparer.Ordinal)
-            {
-                package
-            };
-
+            HashSet<string> reached = new(StringComparer.Ordinal) { package };
             Stack<string> pending = new(reached);
 
             while (pending.Count > 0)
@@ -376,10 +372,7 @@ namespace Base.PackageInstaller.Tests
 
             HashSet<string> reachable = Closure(from);
 
-            foreach (string guid in AssetDatabase.FindAssets(AssetFilter, new[]
-                     {
-                         root
-                     }))
+            foreach (string guid in AssetDatabase.FindAssets(AssetFilter, new[] { root }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
 
