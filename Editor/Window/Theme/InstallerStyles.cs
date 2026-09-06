@@ -232,9 +232,9 @@ namespace Base.PackageInstaller.Window.Theme
             InstallerTheme.Metrics.PillCornerRadius, InstallerTheme.Metrics.PillPaddingX,
             InstallerTheme.Metrics.PillPaddingY);
 
-        private GUIStyle Button(Color background, Color textColor, FontStyle fontStyle)
-            => _builder.ButtonStyle(background, textColor, fontStyle, InstallerTheme.Metrics.CardCornerRadius,
-                InstallerTheme.Metrics.HoverLift, InstallerTheme.Metrics.PressDrop);
+        private GUIStyle Button(Color background, Color textColor, FontStyle fontStyle) => _builder.ButtonStyle(
+            background, textColor, fontStyle, InstallerTheme.Metrics.CardCornerRadius,
+            InstallerTheme.Metrics.HoverLift, InstallerTheme.Metrics.PressDrop);
 
         private void Release()
         {

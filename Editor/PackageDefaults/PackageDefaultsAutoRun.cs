@@ -91,7 +91,7 @@ namespace Base.PackageInstaller.PackageDefaults
                 return;
 
             string generated = PackageDefaultsWriter.Render(packages);
-            DiffResult diff = TextDiff.Compare(generated, PackageDefaultsFile.Read(target), hasTarget: true);
+            DiffResult diff = TextDiff.Compare(generated, PackageDefaultsFile.Read(target), true);
 
             if (diff.State == EDiffState.Identical)
                 return;

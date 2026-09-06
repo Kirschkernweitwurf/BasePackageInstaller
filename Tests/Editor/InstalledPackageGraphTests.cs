@@ -58,6 +58,8 @@ namespace Base.PackageInstaller.Tests
         private readonly HashSet<string> _shippingAssemblies = new(StringComparer.Ordinal);
         private readonly List<RawAsmdef> _shipping = new();
 
+        private string _ownPackage;
+
         /// <summary>
         /// Reads the installed packages and their assembly definitions once, and maps the shipped
         /// entries onto the package names both of them belong to.
@@ -65,6 +67,7 @@ namespace Base.PackageInstaller.Tests
         [OneTimeSetUp]
         public void LoadProject()
         {
+            ResolveOwnPackage();
             CollectPackages();
             CollectAssemblies();
             MapEntries();
@@ -205,6 +208,28 @@ namespace Base.PackageInstaller.Tests
         }
 
         /// <summary>
+        /// Whether a package is one the shipped list is supposed to name. Every base package is, except
+        /// the one this test ships in: the installer is what installs the others and is never installed
+        /// by itself, so it has no entry and is not supposed to have one.
+        /// </summary>
+        /// <param name="package">The package name to test.</param>
+        /// <returns>True when the package belongs in the defaults.</returns>
+        private bool IsInScope(string package) => IsBasePackage(package)
+            && !string.Equals(package, _ownPackage, StringComparison.Ordinal);
+
+        /// <summary>
+        /// Reads the package this test assembly ships in, so it can be left out of everything below.
+        /// </summary>
+        private void ResolveOwnPackage()
+        {
+            PackageInfo info = PackageInfo.FindForAssembly(typeof(InstalledPackageGraphTests).Assembly);
+
+            _ownPackage = info == null
+                ? string.Empty
+                : info.name;
+        }
+
+        /// <summary>
         /// Records every installed base package and the folder it sits in. Read from the package list
         /// rather than from the assembly definitions, so a package that ships only assets is seen too.
         /// </summary>
@@ -212,7 +237,7 @@ namespace Base.PackageInstaller.Tests
         {
             foreach (PackageInfo info in PackageInfo.GetAllRegisteredPackages())
             {
-                if (IsBasePackage(info.name))
+                if (IsInScope(info.name))
                     _rootByPackage[info.name] = info.assetPath;
             }
         }
@@ -231,7 +256,7 @@ namespace Base.PackageInstaller.Tests
                 RawAsmdef data = Read(path);
                 string package = PackageOf(path);
 
-                if (data == null || string.IsNullOrEmpty(data.name) || !IsBasePackage(package))
+                if (data == null || string.IsNullOrEmpty(data.name) || !IsInScope(package))
                     continue;
 
                 all.Add(data);
@@ -292,7 +317,11 @@ namespace Base.PackageInstaller.Tests
         /// </summary>
         private HashSet<string> Closure(string package)
         {
-            HashSet<string> reached = new(StringComparer.Ordinal) { package };
+            HashSet<string> reached = new(StringComparer.Ordinal)
+            {
+                package
+            };
+
             Stack<string> pending = new(reached);
 
             while (pending.Count > 0)
@@ -347,7 +376,10 @@ namespace Base.PackageInstaller.Tests
 
             HashSet<string> reachable = Closure(from);
 
-            foreach (string guid in AssetDatabase.FindAssets(AssetFilter, new[] { root }))
+            foreach (string guid in AssetDatabase.FindAssets(AssetFilter, new[]
+                     {
+                         root
+                     }))
             {
                 string path = AssetDatabase.GUIDToAssetPath(guid);
 
@@ -372,7 +404,7 @@ namespace Base.PackageInstaller.Tests
 
                 string target = PackageOf(dependency);
 
-                if (!IsBasePackage(target)
+                if (!IsInScope(target)
                     || string.Equals(target, from, StringComparison.Ordinal)
                     || reachable.Contains(target))
                     continue;

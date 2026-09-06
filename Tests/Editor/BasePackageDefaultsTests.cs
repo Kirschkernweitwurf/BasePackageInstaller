@@ -18,8 +18,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>The shipped list is not empty, so a failed generation run cannot pass silently.</summary>
         [Test]
-        public void TheShippedDefaultsAreNotEmpty()
-            => Assert.That(BasePackageDefaults.Create(), Is.Not.Empty);
+        public void TheShippedDefaultsAreNotEmpty() => Assert.That(BasePackageDefaults.Create(), Is.Not.Empty);
 
         /// <summary>Every default carries a name and a URL to install from.</summary>
         [Test]
@@ -33,8 +32,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>No two defaults share a name, since the registry matches its entries by name.</summary>
         [Test]
-        public void NoTwoDefaultsShareAName()
-            => Assert.That(Names(BasePackageDefaults.Create()), Is.Unique);
+        public void NoTwoDefaultsShareAName() => Assert.That(Names(BasePackageDefaults.Create()), Is.Unique);
 
         /// <summary>Every default names a dependency the list actually holds.</summary>
         [Test]

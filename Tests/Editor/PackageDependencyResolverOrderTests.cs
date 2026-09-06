@@ -24,7 +24,12 @@ namespace Base.PackageInstaller.Tests
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A, B, C), EPackageMode.Install);
 
-            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[] { C, B, A }));
+            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[]
+            {
+                C,
+                B,
+                A
+            }));
         }
 
         /// <summary>A removal is the install order reversed, so nothing goes while it is still needed.</summary>
@@ -36,7 +41,12 @@ namespace Base.PackageInstaller.Tests
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A, B, C), EPackageMode.Uninstall);
 
-            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[] { A, B, C }));
+            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[]
+            {
+                A,
+                B,
+                C
+            }));
         }
 
         /// <summary>
@@ -51,7 +61,10 @@ namespace Base.PackageInstaller.Tests
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A), EPackageMode.Install);
 
-            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[] { A }));
+            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[]
+            {
+                A
+            }));
         }
 
         /// <summary>A cycle cannot be ordered, so the run falls back to list order instead of stalling.</summary>
@@ -67,19 +80,29 @@ namespace Base.PackageInstaller.Tests
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A, B), EPackageMode.Install);
 
-            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[] { A, B }));
+            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[]
+            {
+                A,
+                B
+            }));
         }
 
         /// <summary>An entry listing itself does not wait for itself.</summary>
         [Test]
         public void AnEntryListingItselfDoesNotStall()
         {
-            PackageEntry[] packages = { TestPackages.Entry(A, A) };
+            PackageEntry[] packages =
+            {
+                TestPackages.Entry(A, A)
+            };
 
             List<int> ordered = PackageDependencyResolver.ResolveOrder(packages,
                 TestPackages.Flags(packages, A), EPackageMode.Install);
 
-            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[] { A }));
+            Assert.That(TestPackages.Names(packages, ordered), Is.EqualTo(new[]
+            {
+                A
+            }));
         }
 
         /// <summary>An empty selection produces an empty run.</summary>
@@ -96,8 +119,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A missing registry produces an empty run rather than throwing.</summary>
         [Test]
-        public void AMissingRegistryProducesNothing() =>
-            Assert.That(PackageDependencyResolver.ResolveOrder(null, null, EPackageMode.Install), Is.Empty);
-
+        public void AMissingRegistryProducesNothing()
+            => Assert.That(PackageDependencyResolver.ResolveOrder(null, null, EPackageMode.Install), Is.Empty);
     }
 }

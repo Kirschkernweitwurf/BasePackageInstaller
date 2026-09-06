@@ -21,7 +21,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void WithoutATargetThereIsNothingToCompare()
         {
-            DiffResult result = TextDiff.Compare(Text(First), Text(First), hasTarget: false);
+            DiffResult result = TextDiff.Compare(Text(First), Text(First), false);
 
             Assert.That(result.State, Is.EqualTo(EDiffState.NoTarget));
             Assert.That(result.Lines, Is.Empty);
@@ -31,7 +31,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void AFileThatDoesNotExistReadsAsMissing()
         {
-            DiffResult result = TextDiff.Compare(Text(First), null, hasTarget: true);
+            DiffResult result = TextDiff.Compare(Text(First), null, true);
 
             Assert.That(result.State, Is.EqualTo(EDiffState.Missing));
             Assert.That(result.Lines, Is.Empty);
@@ -73,7 +73,10 @@ namespace Base.PackageInstaller.Tests
             Assert.That(result.RemovedCount, Is.EqualTo(0));
             Assert.That(Kinds(result), Is.EqualTo(new[]
             {
-                EDiffKind.Unchanged, EDiffKind.Added, EDiffKind.Unchanged, EDiffKind.Unchanged
+                EDiffKind.Unchanged,
+                EDiffKind.Added,
+                EDiffKind.Unchanged,
+                EDiffKind.Unchanged
             }));
         }
 
@@ -85,7 +88,10 @@ namespace Base.PackageInstaller.Tests
 
             Assert.That(result.RemovedCount, Is.EqualTo(1));
             Assert.That(result.AddedCount, Is.EqualTo(0));
-            Assert.That(TextOf(result, EDiffKind.Removed), Is.EqualTo(new[] { Second }));
+            Assert.That(TextOf(result, EDiffKind.Removed), Is.EqualTo(new[]
+            {
+                Second
+            }));
         }
 
         /// <summary>A replaced line reads as one line out and one line in.</summary>
@@ -106,7 +112,11 @@ namespace Base.PackageInstaller.Tests
             DiffResult result = Compare(Text(First, Second), string.Empty);
 
             Assert.That(result.AddedCount, Is.EqualTo(2));
-            Assert.That(TextOf(result, EDiffKind.Added), Is.EqualTo(new[] { First, Second }));
+            Assert.That(TextOf(result, EDiffKind.Added), Is.EqualTo(new[]
+            {
+                First,
+                Second
+            }));
         }
 
         /// <summary>Generating nothing over an existing file removes every line of it.</summary>
@@ -127,8 +137,7 @@ namespace Base.PackageInstaller.Tests
             Assert.That(result.Lines, Has.Count.EqualTo(3));
         }
 
-        private static DiffResult Compare(string generated, string onDisk)
-            => TextDiff.Compare(generated, onDisk, hasTarget: true);
+        private static DiffResult Compare(string generated, string onDisk) => TextDiff.Compare(generated, onDisk, true);
 
         private static string Text(params string[] lines) => string.Join("\r\n", lines);
 

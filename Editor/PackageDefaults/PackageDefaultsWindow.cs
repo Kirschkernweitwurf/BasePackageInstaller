@@ -417,7 +417,7 @@ namespace Base.PackageInstaller.PackageDefaults
         private void RefreshDiff()
         {
             _diff = TextDiff.Compare(_preview, PackageDefaultsFile.Read(_target),
-                hasTarget: !string.IsNullOrEmpty(_target));
+                !string.IsNullOrEmpty(_target));
 
             Repaint();
         }

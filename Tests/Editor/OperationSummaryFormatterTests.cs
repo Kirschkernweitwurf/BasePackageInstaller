@@ -26,9 +26,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An install with no version known still names the package.</summary>
         [Test]
-        public void AnInstallWithoutAVersionStillNamesThePackage()
-            => Assert.That(OperationSummaryFormatter.Describe(TestResults.Installed(string.Empty)),
-                Does.Contain(TestResults.Name));
+        public void AnInstallWithoutAVersionStillNamesThePackage() => Assert.That(
+            OperationSummaryFormatter.Describe(TestResults.Installed(string.Empty)),
+            Does.Contain(TestResults.Name));
 
         /// <summary>An update names both versions, so the user can see what moved.</summary>
         [Test]
@@ -65,9 +65,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A removal of something with no known version still names the package.</summary>
         [Test]
-        public void ARemovalWithoutAVersionStillNamesThePackage()
-            => Assert.That(OperationSummaryFormatter.Describe(TestResults.Removed(string.Empty)),
-                Does.Contain(TestResults.Name));
+        public void ARemovalWithoutAVersionStillNamesThePackage() => Assert.That(
+            OperationSummaryFormatter.Describe(TestResults.Removed(string.Empty)),
+            Does.Contain(TestResults.Name));
 
         /// <summary>
         /// A failure carries the reason it failed. Without it the user is told only that something
@@ -84,9 +84,9 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A failure is described by its label, since the package name may never have resolved.</summary>
         [Test]
-        public void AFailureFallsBackToTheLabel()
-            => Assert.That(OperationSummaryFormatter.Describe(TestResults.Failed(FailureReason)),
-                Does.Contain(TestResults.Label));
+        public void AFailureFallsBackToTheLabel() => Assert.That(
+            OperationSummaryFormatter.Describe(TestResults.Failed(FailureReason)),
+            Does.Contain(TestResults.Label));
 
         /// <summary>An install headline carries the counts that make it readable.</summary>
         [Test]
@@ -152,8 +152,7 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void ARunOverNothingStillProducesAHeadline()
         {
-            string report = OperationSummaryFormatter.BuildSummary(
-                TestResults.Summary(EPackageAction.Add, 0, 0, 0, 0));
+            string report = OperationSummaryFormatter.BuildSummary(TestResults.Summary(EPackageAction.Add, 0, 0, 0, 0));
 
             Assert.That(report, Is.Not.Empty);
             Assert.That(report, Does.Contain("0 ok"));

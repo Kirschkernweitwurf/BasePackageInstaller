@@ -9,6 +9,9 @@ namespace Base.PackageInstaller.Data
     {
         private const string Attributes = "Attributes";
         private const string Audio = "Audio";
+
+        private const string BaseUrl =
+            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
         private const string Content = "Content";
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
@@ -24,9 +27,6 @@ namespace Base.PackageInstaller.Data
         private const string UI = "UI";
         private const string Utility = "Utility";
 
-        private const string BaseUrl =
-            "https://github.com/Kirschkernweitwurf/BaseProjectPackages.git?path=BaseProject/Packages/";
-
         /// <summary>
         /// Creates a fresh copy of the default entries.
         /// </summary>
@@ -35,7 +35,8 @@ namespace Base.PackageInstaller.Data
         {
             new PackageEntry(Attributes, $"{BaseUrl}Attributes", EditorUI, Utility),
             new PackageEntry(Audio, $"{BaseUrl}Audio", Services),
-            new PackageEntry(Content, $"{BaseUrl}Content", Audio, ControllerSupport, CoreDebug, SaveSystem, Settings, UI),
+            new PackageEntry(Content, $"{BaseUrl}Content", Audio, ControllerSupport, CoreDebug, SaveSystem, Settings,
+                UI),
             new PackageEntry(ControllerSupport, $"{BaseUrl}ControllerSupport", Core),
             new PackageEntry(Core, $"{BaseUrl}Core", Tweening),
             new PackageEntry(CoreDebug, $"{BaseUrl}CoreDebug", Core),
