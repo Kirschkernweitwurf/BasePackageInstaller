@@ -212,10 +212,10 @@ namespace Base.PackageInstaller.PackageDefaults
             PackageDefaultsTheme.Metrics.PillCornerRadius, PackageDefaultsTheme.Metrics.PillPaddingX,
             PackageDefaultsTheme.Metrics.PillPaddingY);
 
-        private GUIStyle Button(Color background, Color textColor, FontStyle fontStyle)
-            => _builder.ButtonStyle(background, textColor, fontStyle,
-                PackageDefaultsTheme.Metrics.CardCornerRadius, PackageDefaultsTheme.Metrics.HoverLift,
-                PackageDefaultsTheme.Metrics.PressDrop);
+        private GUIStyle Button(Color background, Color textColor, FontStyle fontStyle) => _builder.ButtonStyle(
+            background, textColor, fontStyle,
+            PackageDefaultsTheme.Metrics.CardCornerRadius, PackageDefaultsTheme.Metrics.HoverLift,
+            PackageDefaultsTheme.Metrics.PressDrop);
 
         private void Release()
         {

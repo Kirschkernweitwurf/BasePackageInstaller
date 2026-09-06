@@ -86,8 +86,8 @@ namespace Base.PackageInstaller.Tests
         /// <param name="packages">The registry the statuses line up with.</param>
         /// <param name="installed">The names to mark installed.</param>
         /// <returns>The statuses.</returns>
-        internal static PackageStatus[] Statuses(PackageEntry[] packages, params string[] installed) =>
-            Build(packages, Flags(packages, installed));
+        internal static PackageStatus[] Statuses(PackageEntry[] packages, params string[] installed)
+            => Build(packages, Flags(packages, installed));
 
         /// <summary>Creates install statuses with every entry marked installed.</summary>
         /// <param name="packages">The registry the statuses line up with.</param>
@@ -156,8 +156,8 @@ namespace Base.PackageInstaller.Tests
         /// <param name="heldBy">The holder array the resolver filled.</param>
         /// <param name="name">The row to read.</param>
         /// <returns>The holder names, joined the way the resolver joins them.</returns>
-        internal static string HeldBy(PackageEntry[] packages, string[] heldBy, string name) =>
-            heldBy[IndexOf(packages, name)] ?? string.Empty;
+        internal static string HeldBy(PackageEntry[] packages, string[] heldBy, string name)
+            => heldBy[IndexOf(packages, name)] ?? string.Empty;
 
         private static PackageStatus[] Build(PackageEntry[] packages, bool[] installed)
         {
@@ -167,7 +167,7 @@ namespace Base.PackageInstaller.Tests
             {
                 statuses[index] = installed[index]
                     ? new PackageStatus(true, packages[index].Name, Version)
-                    : default;
+                    : default(PackageStatus);
             }
 
             return statuses;

@@ -45,7 +45,10 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void AnEntryWithoutAUrlIsReported()
         {
-            PackageEntry[] packages = { new(A, string.Empty) };
+            PackageEntry[] packages =
+            {
+                new(A, string.Empty)
+            };
 
             Assert.That(PackageRegistryValidator.Validate(packages), Has.Length.EqualTo(1));
         }
@@ -67,7 +70,10 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void AnEntryListingItselfIsReportedOnce()
         {
-            PackageEntry[] packages = { TestPackages.Entry(A, A) };
+            PackageEntry[] packages =
+            {
+                TestPackages.Entry(A, A)
+            };
 
             Assert.That(PackageRegistryValidator.Validate(packages), Has.Length.EqualTo(1));
         }
@@ -76,7 +82,10 @@ namespace Base.PackageInstaller.Tests
         [Test]
         public void ADependencyOnNothingIsReported()
         {
-            PackageEntry[] packages = { TestPackages.Entry(A, Unknown) };
+            PackageEntry[] packages =
+            {
+                TestPackages.Entry(A, Unknown)
+            };
 
             Assert.That(PackageRegistryValidator.Validate(packages), Has.Length.EqualTo(1));
         }
@@ -110,8 +119,8 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An empty registry reports nothing.</summary>
         [Test]
-        public void AnEmptyRegistryReportsNothing() =>
-            Assert.That(PackageRegistryValidator.Validate(Array.Empty<PackageEntry>()), Is.Empty);
+        public void AnEmptyRegistryReportsNothing()
+            => Assert.That(PackageRegistryValidator.Validate(Array.Empty<PackageEntry>()), Is.Empty);
 
         /// <summary>A missing registry reports nothing rather than throwing.</summary>
         [Test]

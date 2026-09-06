@@ -23,9 +23,14 @@ namespace Base.PackageInstaller.Tests
             PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, A),
-                EPackageMode.Install, expandDependencies: true);
+                EPackageMode.Install, true);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { A, B, C }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                A,
+                B,
+                C
+            }));
         }
 
         /// <summary>
@@ -38,9 +43,13 @@ namespace Base.PackageInstaller.Tests
             PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, D),
-                EPackageMode.Install, expandDependencies: true);
+                EPackageMode.Install, true);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { C, D }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                C,
+                D
+            }));
         }
 
         /// <summary>A released entry stays in when another pick still needs it.</summary>
@@ -50,34 +59,53 @@ namespace Base.PackageInstaller.Tests
             PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, B, D),
-                EPackageMode.Install, expandDependencies: true);
+                EPackageMode.Install, true);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { B, C, D }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                B,
+                C,
+                D
+            }));
         }
 
         /// <summary>A dependency naming an entry the registry does not hold is ignored.</summary>
         [Test]
         public void AnInstallIgnoresUnknownDependencies()
         {
-            PackageEntry[] packages = { TestPackages.Entry(Standalone, Unknown) };
+            PackageEntry[] packages =
+            {
+                TestPackages.Entry(Standalone, Unknown)
+            };
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, Standalone),
-                EPackageMode.Install, expandDependencies: true);
+                EPackageMode.Install, true);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { Standalone }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                Standalone
+            }));
         }
 
         /// <summary>An entry listing itself neither selects twice nor claims to hold itself.</summary>
         [Test]
         public void AnInstallIgnoresAnEntryListingItself()
         {
-            PackageEntry[] packages = { TestPackages.Entry(A, A) };
+            PackageEntry[] packages =
+            {
+                TestPackages.Entry(A, A)
+            };
+
             string[] heldBy = new string[packages.Length];
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, A),
-                EPackageMode.Install, expandDependencies: true, heldBy);
+                EPackageMode.Install, true, heldBy);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { A }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                A
+            }));
+
             Assert.That(TestPackages.HeldBy(packages, heldBy, A), Is.Empty);
         }
 
@@ -88,9 +116,15 @@ namespace Base.PackageInstaller.Tests
             PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, C),
-                EPackageMode.Uninstall, expandDependencies: true);
+                EPackageMode.Uninstall, true);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { A, B, C, D }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                A,
+                B,
+                C,
+                D
+            }));
         }
 
         /// <summary>A removal leaves alone what does not depend on the pick.</summary>
@@ -100,9 +134,13 @@ namespace Base.PackageInstaller.Tests
             PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, B),
-                EPackageMode.Uninstall, expandDependencies: true);
+                EPackageMode.Uninstall, true);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { A, B }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                A,
+                B
+            }));
         }
 
         /// <summary>Removing reverses what the column means, so a row names what it requires.</summary>
@@ -113,7 +151,7 @@ namespace Base.PackageInstaller.Tests
             string[] heldBy = new string[packages.Length];
 
             TestPackages.Resolve(packages, TestPackages.Flags(packages, C), EPackageMode.Uninstall,
-                expandDependencies: true, heldBy);
+                true, heldBy);
 
             Assert.That(TestPackages.HeldBy(packages, heldBy, A), Is.EqualTo(B));
         }
@@ -125,9 +163,12 @@ namespace Base.PackageInstaller.Tests
             PackageEntry[] packages = TestPackages.Chain();
 
             bool[] selected = TestPackages.Resolve(packages, TestPackages.Flags(packages, A),
-                EPackageMode.Install, expandDependencies: false);
+                EPackageMode.Install, false);
 
-            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[] { A }));
+            Assert.That(TestPackages.Names(packages, selected), Is.EqualTo(new[]
+            {
+                A
+            }));
         }
 
         /// <summary>With expansion off the holders are still reported, so the window can still warn.</summary>
@@ -138,7 +179,7 @@ namespace Base.PackageInstaller.Tests
             string[] heldBy = new string[packages.Length];
 
             TestPackages.Resolve(packages, TestPackages.Flags(packages, A), EPackageMode.Install,
-                expandDependencies: false, heldBy);
+                false, heldBy);
 
             Assert.That(TestPackages.HeldBy(packages, heldBy, B), Is.EqualTo(A));
         }
@@ -151,15 +192,14 @@ namespace Base.PackageInstaller.Tests
             string[] heldBy = new string[packages.Length];
 
             TestPackages.Resolve(packages, TestPackages.Flags(packages, A, D), EPackageMode.Install,
-                expandDependencies: true, heldBy);
+                true, heldBy);
 
             Assert.That(TestPackages.HeldBy(packages, heldBy, C), Is.EqualTo($"{B}, {D}"));
         }
 
         /// <summary>A missing registry is ignored rather than throwing.</summary>
         [Test]
-        public void AMissingRegistryIsIgnored() => Assert.DoesNotThrow(() => PackageDependencyResolver.Resolve(
-            null, null, null, null, EPackageMode.Install, expandDependencies: true));
-
+        public void AMissingRegistryIsIgnored() => Assert.DoesNotThrow(()
+            => PackageDependencyResolver.Resolve(null, null, null, null, EPackageMode.Install, true));
     }
 }

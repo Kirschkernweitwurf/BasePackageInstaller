@@ -23,8 +23,8 @@ namespace Base.PackageInstaller.Tests
         /// <summary>A package that was installed fresh, with no version known before.</summary>
         /// <param name="version">The version it landed on.</param>
         /// <returns>The result.</returns>
-        internal static PackageResult Installed(string version = NewVersion)
-            => new(Label, Name, version, string.Empty, true, true, null, EPackageAction.Add);
+        internal static PackageResult Installed(string version = NewVersion) => new(Label, Name, version, string.Empty,
+            true, true, null, EPackageAction.Add);
 
         /// <summary>A package that moved from one version to another.</summary>
         /// <returns>The result.</returns>
@@ -39,14 +39,14 @@ namespace Base.PackageInstaller.Tests
         /// <summary>A package that was taken out of the project.</summary>
         /// <param name="previousVersion">The version it held before, or empty when unknown.</param>
         /// <returns>The result.</returns>
-        internal static PackageResult Removed(string previousVersion = OldVersion)
-            => new(Label, Name, string.Empty, previousVersion, true, true, null, EPackageAction.Remove);
+        internal static PackageResult Removed(string previousVersion = OldVersion) => new(Label, Name, string.Empty,
+            previousVersion, true, true, null, EPackageAction.Remove);
 
         /// <summary>A package the run could not process.</summary>
         /// <param name="error">The reason it failed.</param>
         /// <returns>The result.</returns>
-        internal static PackageResult Failed(string error)
-            => new(Label, Name, string.Empty, string.Empty, false, false, error, EPackageAction.Add);
+        internal static PackageResult Failed(string error) => new(Label, Name, string.Empty, string.Empty, false, false,
+            error, EPackageAction.Add);
 
         /// <summary>Wraps results into the summary a finished run reports.</summary>
         /// <param name="action">What the run did to the packages.</param>
@@ -57,7 +57,7 @@ namespace Base.PackageInstaller.Tests
         /// <param name="results">The individual results.</param>
         /// <returns>The summary.</returns>
         internal static OperationSummary Summary(EPackageAction action, int successCount, int failedCount,
-            int changedCount, int unchangedCount, params PackageResult[] results)
-            => new(results, action, successCount, failedCount, changedCount, unchangedCount);
+            int changedCount, int unchangedCount, params PackageResult[] results) => new(results, action, successCount,
+            failedCount, changedCount, unchangedCount);
     }
 }

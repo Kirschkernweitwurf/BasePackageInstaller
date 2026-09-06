@@ -18,17 +18,10 @@ namespace Base.PackageInstaller.Tests
         private const string LegacyName = "Settings System";
         private const string TwoWordFolder = "ControllerSupport";
 
-        /// <summary>Every default the installer ships. One test case is generated per entry.</summary>
-        private static IEnumerable<string> EveryDefaultName()
-        {
-            foreach (PackageEntry entry in BasePackageDefaults.Create())
-                yield return entry.Name;
-        }
-
         /// <summary>A folder name splits into words at its capitals.</summary>
         [Test]
-        public void AFolderNameSplitsAtItsCapitals()
-            => Assert.That(PackageDisplayNames.Resolve(TwoWordFolder), Is.EqualTo("Controller Support"));
+        public void AFolderNameSplitsAtItsCapitals() => Assert.That(PackageDisplayNames.Resolve(TwoWordFolder),
+            Is.EqualTo("Controller Support"));
 
         /// <summary>A run of capitals stays in one piece, so an acronym is not torn apart.</summary>
         [Test]
@@ -55,8 +48,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>An empty name is handed straight back rather than treated as a rename.</summary>
         [Test]
-        public void AnEmptyNameIsHandedBack()
-            => Assert.That(LegacyPackageNames.Resolve(string.Empty), Is.Empty);
+        public void AnEmptyNameIsHandedBack() => Assert.That(LegacyPackageNames.Resolve(string.Empty), Is.Empty);
 
         /// <summary>
         /// Documents that a missing name throws rather than being handed back. Every other entry
@@ -89,6 +81,13 @@ namespace Base.PackageInstaller.Tests
         [TestCaseSource(nameof(EveryDefaultName))]
         public void ACurrentNameIsNeverRenamedAway(string name)
             => Assert.That(LegacyPackageNames.Resolve(name), Is.EqualTo(name));
+
+        /// <summary>Every default the installer ships. One test case is generated per entry.</summary>
+        private static IEnumerable<string> EveryDefaultName()
+        {
+            foreach (PackageEntry entry in BasePackageDefaults.Create())
+                yield return entry.Name;
+        }
 
         // The names the installer ships today, as the list the membership check reads.
         private static List<string> CurrentNames()

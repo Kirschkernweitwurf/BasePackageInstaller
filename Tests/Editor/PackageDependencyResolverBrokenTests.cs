@@ -24,7 +24,12 @@ namespace Base.PackageInstaller.Tests
             List<string> broken = PackageDependencyResolver.FindBroken(packages,
                 TestPackages.Flags(packages, C), TestPackages.AllStatuses(packages));
 
-            Assert.That(broken, Is.EqualTo(new[] { A, B, D }));
+            Assert.That(broken, Is.EqualTo(new[]
+            {
+                A,
+                B,
+                D
+            }));
         }
 
         /// <summary>A package that is not installed cannot break, so it is not named.</summary>
@@ -36,7 +41,10 @@ namespace Base.PackageInstaller.Tests
             List<string> broken = PackageDependencyResolver.FindBroken(packages,
                 TestPackages.Flags(packages, C), TestPackages.Statuses(packages, B, C));
 
-            Assert.That(broken, Is.EqualTo(new[] { B }));
+            Assert.That(broken, Is.EqualTo(new[]
+            {
+                B
+            }));
         }
 
         /// <summary>Taking the whole chain out leaves nothing behind to break.</summary>
@@ -65,8 +73,7 @@ namespace Base.PackageInstaller.Tests
 
         /// <summary>A missing registry reports nothing rather than throwing.</summary>
         [Test]
-        public void AMissingRegistryReportsNothing() =>
-            Assert.That(PackageDependencyResolver.FindBroken(null, null, null), Is.Empty);
-
+        public void AMissingRegistryReportsNothing()
+            => Assert.That(PackageDependencyResolver.FindBroken(null, null, null), Is.Empty);
     }
 }

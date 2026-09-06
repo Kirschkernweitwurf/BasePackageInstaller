@@ -40,18 +40,6 @@ namespace Base.PackageInstaller.Shared
         private const string RevisionMemberName = "Revision";
         private const string TableTypeName = "Base.EditorUIPackage.Editor.EditorTableStyles" + Assembly;
 
-        private static readonly Dictionary<string, Func<Color>> ColorGetters = new();
-        private static readonly Dictionary<string, Func<float>> FloatGetters = new();
-        private static readonly Dictionary<string, Func<int>> IntGetters = new();
-        private static readonly HashSet<string> Reported = new();
-
-        private static readonly Type MetricsType = Type.GetType(MetricsTypeName, false);
-        private static readonly Type PaletteType = Type.GetType(PaletteTypeName, false);
-        private static readonly Type ProviderType = Type.GetType(ProviderTypeName, false);
-        private static readonly Type TableType = Type.GetType(TableTypeName, false);
-
-        private static Func<int> _revision;
-
         /// <summary>True when the Editor UI package is installed and its palette could be found.</summary>
         internal static bool IsAvailable => PaletteType != null;
 
@@ -73,6 +61,18 @@ namespace Base.PackageInstaller.Shared
                     : 0;
             }
         }
+
+        private static readonly Dictionary<string, Func<Color>> ColorGetters = new();
+        private static readonly Dictionary<string, Func<float>> FloatGetters = new();
+        private static readonly Dictionary<string, Func<int>> IntGetters = new();
+        private static readonly HashSet<string> Reported = new();
+
+        private static readonly Type MetricsType = Type.GetType(MetricsTypeName, false);
+        private static readonly Type PaletteType = Type.GetType(PaletteTypeName, false);
+        private static readonly Type ProviderType = Type.GetType(ProviderTypeName, false);
+        private static readonly Type TableType = Type.GetType(TableTypeName, false);
+
+        private static Func<int> _revision;
 
         /// <summary>Reads a color from the shared palette.</summary>
         /// <param name="member">Name of the property on the Editor UI palette.</param>
@@ -99,8 +99,7 @@ namespace Base.PackageInstaller.Shared
         /// <param name="member">Name of the property on the Editor UI metrics.</param>
         /// <param name="fallback">The installer's own value, used when the package is absent.</param>
         /// <returns>The themed value, or the fallback.</returns>
-        internal static int Metric(string member, int fallback)
-            => Read(IntGetters, MetricsType, member, fallback);
+        internal static int Metric(string member, int fallback) => Read(IntGetters, MetricsType, member, fallback);
 
         private static T Read<T>(Dictionary<string, Func<T>> cache, Type owner, string member, T fallback)
         {
