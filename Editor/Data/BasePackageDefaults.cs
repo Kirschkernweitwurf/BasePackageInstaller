@@ -8,9 +8,11 @@ namespace Base.PackageInstaller.Data
     internal static class BasePackageDefaults
     {
         private const string Attributes = "Attributes";
+        private const string Audio = "Audio";
         private const string Content = "Content";
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
+        private const string CoreDebug = "Core Debug";
         private const string EditorUI = "Editor UI";
         private const string Localization = "Localization";
         private const string MemoryProfiler = "Memory Profiler";
@@ -32,9 +34,11 @@ namespace Base.PackageInstaller.Data
         internal static PackageEntry[] Create() => new[]
         {
             new PackageEntry(Attributes, $"{BaseUrl}Attributes", EditorUI, Utility),
-            new PackageEntry(Content, $"{BaseUrl}Content", ControllerSupport, SaveSystem, Settings, UI),
+            new PackageEntry(Audio, $"{BaseUrl}Audio", Services),
+            new PackageEntry(Content, $"{BaseUrl}Content", Audio, ControllerSupport, CoreDebug, SaveSystem, Settings, UI),
             new PackageEntry(ControllerSupport, $"{BaseUrl}ControllerSupport", Core),
             new PackageEntry(Core, $"{BaseUrl}Core", Tweening),
+            new PackageEntry(CoreDebug, $"{BaseUrl}CoreDebug", Core),
             new PackageEntry(EditorUI, $"{BaseUrl}EditorUI"),
             new PackageEntry(Localization, $"{BaseUrl}Localization", EditorUI, Utility),
             new PackageEntry(MemoryProfiler, $"{BaseUrl}MemoryProfiler", Core),
