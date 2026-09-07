@@ -1,0 +1,65 @@
+# Coding conventions for BasePackageInstaller, in the one format every editor and the inspection
+# runner already read. Rider, Visual Studio and the command line InspectCode all pick this up, so a
+# report generated anywhere agrees with the rules the code is actually written to.
+#
+# The same rules as the packages repository, so a report from either one reads the same way.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+insert_final_newline = false
+trim_trailing_whitespace = true
+
+# Indent and width are set for C# only. The asmdef files mix widths by hand and nothing should
+# reformat them on open.
+[*.cs]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# Explicit types everywhere. Setting the preference rather than silencing the inspection means a var
+# that slips in is reported, instead of the whole category being ignored.
+resharper_csharp_for_built_in_types = use_explicit_type
+resharper_csharp_for_other_types = use_explicit_type
+resharper_csharp_for_simple_types = use_explicit_type
+resharper_suggest_var_or_type_built_in_types_highlighting = warning
+resharper_suggest_var_or_type_elsewhere_highlighting = warning
+resharper_suggest_var_or_type_simple_types_highlighting = warning
+
+# Acronyms that stay upright. Without this, EUIEventType reads as Eui and every rule that touches it
+# reports a name nobody would write.
+resharper_csharp_naming_abbreviations = FPS,GUI,ID,IO,SO,UI,UID,USS,UXML
+
+# Naming, in the shapes this codebase uses.
+resharper_csharp_naming_rule.constants = AaBb
+resharper_csharp_naming_rule.private_constants = AaBb
+resharper_csharp_naming_rule.private_instance_fields = _aaBb
+resharper_csharp_naming_rule.private_static_fields = _aaBb
+resharper_csharp_naming_rule.private_static_readonly = AaBb
+resharper_csharp_naming_rule.static_readonly = AaBb
+resharper_csharp_naming_rule.unity_serialized_field = aaBb
+
+# A package exists to be called from projects the inspection cannot see, so public API with no caller
+# in this solution is the normal case and not a finding.
+resharper_event_never_subscribed_to_global_highlighting = none
+resharper_member_can_be_private_global_highlighting = none
+resharper_not_accessed_field_global_highlighting = none
+resharper_unused_auto_property_accessor_global_highlighting = none
+resharper_unused_member_global_highlighting = none
+resharper_unused_method_return_value_global_highlighting = none
+resharper_unused_parameter_global_highlighting = none
+resharper_unused_type_global_highlighting = none
+
+# Editor tooling, not a game loop. These fire on every editor window and say nothing about the code
+# that ships in a build.
+resharper_unity_performance_critical_code_camera_main_highlighting = none
+resharper_unity_performance_critical_code_invocation_highlighting = none
+resharper_unity_performance_critical_code_null_comparison_highlighting = none
+
+# Both operators use the plain C# null check, which misses a destroyed UnityEngine.Object. Suggesting
+# either one on a type that might be an Object is how that bug gets written, so neither is suggested
+# at all and the few valid cases are made by hand.
+resharper_merge_conditional_expression_highlighting = none
+resharper_use_null_propagation_highlighting = none
