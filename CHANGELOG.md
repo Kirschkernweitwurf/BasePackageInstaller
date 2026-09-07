@@ -4,6 +4,19 @@ All notable changes to this package. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions are the ones this package
 actually shipped under, read back from `package.json` at each commit that changed it.
 
+## [1.4.9] - 2026-09-07
+
+### Added
+
+- An `.editorconfig` at the repository root, matching the one in the packages repository, so a report
+  generated from either agrees with the rules the code is written to.
+
+### Changed
+
+- The package defaults section header style is private. The window that owns those styles never asks
+  for it, and the call that looked like it did is on `InstallerStyles`, a different class that happens
+  to declare a style of the same name.
+
 ## [1.4.7] - 2026-09-06
 
 ### Added

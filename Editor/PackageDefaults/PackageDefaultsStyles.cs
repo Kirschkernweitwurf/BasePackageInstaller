@@ -23,7 +23,7 @@ namespace Base.PackageInstaller.PackageDefaults
         internal GUIStyle Description { get; private set; }
 
         /// <summary>The heading above a section of the window.</summary>
-        internal GUIStyle SectionHeader { get; private set; }
+        private GUIStyle SectionHeader { get; set; }
 
         /// <summary>The package name in a dependency row.</summary>
         internal GUIStyle RowLabel { get; private set; }
