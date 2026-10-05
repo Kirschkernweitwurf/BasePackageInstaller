@@ -2,6 +2,8 @@
 
 🧰 **Tools** · menu items and editor windows
 
+**Tags:** #setup
+
 The editor tools that come with the **Base Package Installer**. They run in the Unity Editor only and never ship with the game.
 
 ## Available tools

@@ -6,6 +6,13 @@ actually shipped under, read back from `package.json` at each commit that change
 
 ## [Unreleased]
 
+## [1.4.13] - 2026-10-05
+
+### Added
+
+- Tags in the docs. Every page has a **Tags** line saying who needs it and what it is about, and
+  `Tags.md` lists every page of the package by tag.
+
 ## [1.4.12] - 2026-10-05
 
 ### Fixed
