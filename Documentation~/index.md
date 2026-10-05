@@ -10,9 +10,9 @@ Everything happens in one editor window. Tick what you need, click once, done.
 
 | Tool | What it does |
 | --- | --- |
-| [🔧 Git Package Manager](<Tools/Git Package Manager.md>) | The main window. Shows every package with its status and version, and installs or updates the ones you tick. |
-| [🔧 Git Packages List](<Tools/Git Packages List.md>) | The per-project list of packages the window offers. Add your own Git URLs here. |
-| [🔧 Project Input Service Setup](<Tools/Project Input Service Setup.md>) | One click to create the input action asset and input service in a new project. |
+| [🔧 Git Package Manager](Tools/Git%20Package%20Manager.md) | The main window. Shows every package with its status and version, and installs or updates the ones you tick. |
+| [🔧 Git Packages List](Tools/Git%20Packages%20List.md) | The per-project list of packages the window offers. Add your own Git URLs here. |
+| [🔧 Project Input Service Setup](Tools/Project%20Input%20Service%20Setup.md) | One click to create the input action asset and input service in a new project. |
 
 ## Installation
 

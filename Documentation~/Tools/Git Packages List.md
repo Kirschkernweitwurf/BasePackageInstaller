@@ -2,7 +2,7 @@
 
 🔧 **Tool** · programmers only
 
-The list of packages the [🔧 Git Package Manager](<Git Package Manager.md>) offers. Edit it here to add your own Git packages or remove ones this project does not need.
+The list of packages the [🔧 Git Package Manager](Git%20Package%20Manager.md) offers. Edit it here to add your own Git packages or remove ones this project does not need.
 
 ## Where to find it
 
