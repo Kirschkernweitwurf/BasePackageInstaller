@@ -2,6 +2,8 @@
 
 🔧 **Tool** · programmers only
 
+**Tags:** #programmer #setup #gamepad
+
 Creates the input setup for a fresh project in one click: an input action asset plus the matching `ProjectInputService` class.
 
 ## Where to find it

@@ -2,6 +2,8 @@
 
 🔧 **Tool** · programmers only
 
+**Tags:** #programmer #setup
+
 Installs and updates all Base packages, and any other Git package, from one window. No copying Git URLs one by one.
 
 ## Where to find it
