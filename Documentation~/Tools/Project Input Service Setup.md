@@ -6,7 +6,7 @@ Creates the input setup for a fresh project in one click: an input action asset 
 
 ## Where to find it
 
-In the [🔧 Git Package Manager](<Git Package Manager.md>) window, under **Project Setup**. The button is called **Create ProjectInputService**.
+In the [🔧 Git Package Manager](Git%20Package%20Manager.md) window, under **Project Setup**. The button is called **Create ProjectInputService**.
 
 ## What it creates
 
