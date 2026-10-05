@@ -2,6 +2,8 @@
 
 A Unity editor window that installs and updates my [BaseProjectPackages](https://github.com/Kirschkernweitwurf/BaseProjectPackages), and any other Git package, without pasting URLs one by one.
 
+**Team docs:** how to use everything in the editor is in [`Documentation~/index.md`](Documentation~/index.md). In Unity, open `Help > Base Packages Documentation`.
+
 **This is the recommended way to install the base packages and for most of them the only practical one.** It holds the dependency graph, so ticking one package brings in everything it needs, in an order that leaves the project compiling at every step.
 
 ## Installation

@@ -4,6 +4,15 @@ All notable changes to this package. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions are the ones this package
 actually shipped under, read back from `package.json` at each commit that changed it.
 
+## [Unreleased]
+
+## [1.4.10] - 2026-10-05
+
+### Added
+
+- Team documentation in `Documentation~`, moved over from the old wiki. Menu paths updated to
+  `Tools > Installer`. `documentationUrl` points at it.
+
 ## [1.4.9] - 2026-09-07
 
 ### Added
