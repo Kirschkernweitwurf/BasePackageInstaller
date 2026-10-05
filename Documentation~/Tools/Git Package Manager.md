@@ -1,5 +1,7 @@
 # Git Package Manager
 
+🔧 **Tool** · programmers only
+
 Installs and updates all Base packages, and any other Git package, from one window. No copying Git URLs one by one.
 
 ## Where to find it
@@ -12,10 +14,10 @@ Installs and updates all Base packages, and any other Git package, from one wind
 | --- | --- |
 | Package table | One row per package with a checkbox, its status pill (green **Installed**, grey **Not installed**) and the installed version. |
 | Refresh | Re-checks the status of every package and pulls in new default packages. |
-| Edit List | Opens the [🔧 Git Packages List](git-packages-list.md) page in the Project Settings. |
+| Edit List | Opens the [🔧 Git Packages List](<Git Packages List.md>) page in the Project Settings. |
 | Select All / Deselect All | Ticks or unticks every row. |
 | Action button | Runs the job on the ticked packages. |
-| Project Setup | Only shows while the input service is missing. See [🔧 Project Input Service Setup](project-input-service-setup.md). |
+| Project Setup | Only shows while the input service is missing. See [🔧 Project Input Service Setup](<Project Input Service Setup.md>). |
 | Result | Summary after a run, with a **Clear** button to dismiss it. |
 
 ## The action button
