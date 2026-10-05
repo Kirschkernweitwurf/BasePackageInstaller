@@ -1,5 +1,7 @@
 # Installer Package
 
+📦 **Package** · reusable, works in any of our projects
+
 A small Unity tool for installing and updating the Base packages, and any other Git package, without copying Git URLs by hand.
 
 Everything happens in one editor window. Tick what you need, click once, done.
@@ -8,9 +10,9 @@ Everything happens in one editor window. Tick what you need, click once, done.
 
 | Tool | What it does |
 | --- | --- |
-| [🔧 Git Package Manager](tools/git-package-manager.md) | The main window. Shows every package with its status and version, and installs or updates the ones you tick. |
-| [🔧 Git Packages List](tools/git-packages-list.md) | The per-project list of packages the window offers. Add your own Git URLs here. |
-| [🔧 Project Input Service Setup](tools/project-input-service-setup.md) | One click to create the input action asset and input service in a new project. |
+| [🔧 Git Package Manager](<Tools/Git Package Manager.md>) | The main window. Shows every package with its status and version, and installs or updates the ones you tick. |
+| [🔧 Git Packages List](<Tools/Git Packages List.md>) | The per-project list of packages the window offers. Add your own Git URLs here. |
+| [🔧 Project Input Service Setup](<Tools/Project Input Service Setup.md>) | One click to create the input action asset and input service in a new project. |
 
 ## Installation
 
@@ -47,11 +49,11 @@ The list starts with the 16 Base packages and can be edited per project. Depende
 
 | Section | What you find there |
 | --- | --- |
-| [🧰 Tools](tools/index.md) | Every tool, where to find it and what each button does |
+| [🧰 Tools](Tools.md) | Every tool, where to find it and what each button does |
 
 ## Reading these docs
 
-Every page says near the top who it is for. The emoji in front of a link says the same:
+Every page shows its icon and who it is for right under the title. Links to it carry the same icon:
 
 | Area | Everyone | Programmers only |
 | --- | --- | --- |

@@ -1,10 +1,12 @@
 # Project Input Service Setup
 
+🔧 **Tool** · programmers only
+
 Creates the input setup for a fresh project in one click: an input action asset plus the matching `ProjectInputService` class.
 
 ## Where to find it
 
-In the [🔧 Git Package Manager](git-package-manager.md) window, under **Project Setup**. The button is called **Create ProjectInputService**.
+In the [🔧 Git Package Manager](<Git Package Manager.md>) window, under **Project Setup**. The button is called **Create ProjectInputService**.
 
 ## What it creates
 
