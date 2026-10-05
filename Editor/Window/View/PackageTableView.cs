@@ -90,21 +90,21 @@ namespace Base.PackageInstaller.Window.View
 
         private static Rect ColumnsArea(Rect row)
         {
-            float inset = InstallerTheme.Metrics.TableEdgeInset;
+            const float inset = InstallerTheme.Metrics.TableEdgeInset;
 
             return new Rect(row.x + inset, row.y, row.width - inset * 2f, row.height);
         }
 
         private static Rect InsetVertically(Rect card)
         {
-            float padding = InstallerTheme.Metrics.CardVerticalPadding;
+            const float padding = InstallerTheme.Metrics.CardVerticalPadding;
 
             return new Rect(card.x, card.y + padding, card.width, card.height - padding * 2f);
         }
 
         private static Rect ToggleRect(Rect cell)
         {
-            float size = InstallerTheme.Metrics.ToggleSize;
+            const float size = InstallerTheme.Metrics.ToggleSize;
             float y = cell.y + (cell.height - size) * 0.5f;
 
             return new Rect(cell.x, y, size, size);
@@ -170,7 +170,7 @@ namespace Base.PackageInstaller.Window.View
             GUI.Label(_columns.VersionRect(area), VersionText(status), _styles.RowLabel);
         }
 
-        private void DrawToggle(Rect cell, bool[] selected, bool[] userSelected, int index, bool isLocked,
+        private static void DrawToggle(Rect cell, bool[] selected, bool[] userSelected, int index, bool isLocked,
             bool isUnavailable)
         {
             Rect toggle = ToggleRect(cell);
@@ -236,7 +236,7 @@ namespace Base.PackageInstaller.Window.View
 
             // Inset by the same padding the text columns use, so the pill does not sit flush
             // against the divider line to its left.
-            float inset = InstallerTheme.Metrics.CellTextPadding;
+            const float inset = InstallerTheme.Metrics.CellTextPadding;
             float width = Mathf.Min(style.CalcSize(content).x, Mathf.Max(0f, cell.width - inset));
             float y = cell.y + (cell.height - InstallerTheme.Metrics.PillHeight) * 0.5f;
             Rect pill = new(cell.x + inset, y, width, InstallerTheme.Metrics.PillHeight);
