@@ -6,6 +6,15 @@ actually shipped under, read back from `package.json` at each commit that change
 
 ## [Unreleased]
 
+## [1.4.14] - 2026-10-14
+
+### Fixed
+
+- The package list follows the defaults on its own. It was filled from the defaults once and then only
+  updated by pressing **Refresh**, so projects seeded early kept listing 10 packages after the defaults
+  grew to 16. The registry now remembers which defaults it last synced with and pulls in new or changed
+  ones the next time it is read. A default a project removed stays removed until the defaults change.
+
 ## [1.4.13] - 2026-10-05
 
 ### Added

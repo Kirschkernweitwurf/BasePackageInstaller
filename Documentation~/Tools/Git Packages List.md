@@ -21,5 +21,6 @@ The list of packages the [🔧 Git Package Manager](Git%20Package%20Manager.md) 
 
 - The list is stored per project in `ProjectSettings/BasePackageRegistry.asset`, so it goes into version control and everyone on the project sees the same list.
 - The default Base packages are filled in the first time you use the tool.
-- **Refresh** in the window merges in new or changed defaults without throwing away entries you added yourself.
+- New or changed defaults are merged in on their own the next time the list is read, after the installer updates. Entries you added yourself stay. A default you removed stays removed until the defaults change again.
+- **Refresh** in the window does the same merge right away.
 - Any Git package works here, not just the Base ones.

@@ -15,7 +15,7 @@ Installs and updates all Base packages, and any other Git package, from one wind
 | Part | What it does |
 | --- | --- |
 | Package table | One row per package with a checkbox, its status pill (green **Installed**, grey **Not installed**) and the installed version. |
-| Refresh | Re-checks the status of every package and pulls in new default packages. |
+| Refresh | Re-checks the status of every package and pulls in new default packages. New defaults also arrive on their own when the window opens. |
 | Edit List | Opens the [🔧 Git Packages List](Git%20Packages%20List.md) page in the Project Settings. |
 | Select All / Deselect All | Ticks or unticks every row. |
 | Action button | Runs the job on the ticked packages. |

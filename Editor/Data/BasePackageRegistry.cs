@@ -13,14 +13,23 @@ namespace Base.PackageInstaller.Data
     /// Seeded with <see cref="BasePackageDefaults"/> on first creation; consumers can then
     /// add, remove or edit entries via the Git Packages page in the project settings.
     /// </para>
+    /// <para>
+    /// Kept in step with the defaults on its own: whenever the defaults the installer ships differ
+    /// from the ones the registry last synced with, the next read pulls them in. A project that was
+    /// seeded long ago and never refreshed by hand would otherwise keep listing the old set forever.
+    /// </para>
     /// </summary>
     [FilePath("ProjectSettings/BasePackageRegistry.asset", FilePathAttribute.Location.ProjectFolder)]
     internal sealed class BasePackageRegistry : ScriptableSingleton<BasePackageRegistry>
     {
+        private const string EntrySeparator = "\n";
+        private const char FieldSeparator = '|';
+
         /// <summary>The serialized name of the package list, for the settings provider to bind against.</summary>
         internal const string PackagesPropertyName = nameof(packages);
 
         [SerializeField] private bool seeded;
+        [SerializeField] private string syncedDefaults;
         [SerializeField] private List<PackageEntry> packages = new();
 
         /// <summary>The registered packages sorted alphabetically by name.</summary>
@@ -28,7 +37,7 @@ namespace Base.PackageInstaller.Data
         {
             get
             {
-                EnsureSeeded();
+                EnsureCurrent();
 
                 PackageEntry[] sorted = packages.ToArray();
                 Array.Sort(sorted,
@@ -51,14 +60,19 @@ namespace Base.PackageInstaller.Data
         /// through <see cref="LegacyPackageNames"/>, so the rename does not read as a new package.
         /// </para>
         /// </summary>
-        /// <returns><c>true</c> when the registry changed and was saved.</returns>
+        /// <returns><c>true</c> when the package list changed.</returns>
         internal bool SyncWithDefaults()
         {
             EnsureSeeded();
 
+            PackageEntry[] defaults = BasePackageDefaults.Create();
+            string fingerprint = Fingerprint(defaults);
+            bool isNewFingerprint = syncedDefaults != fingerprint;
             bool changed = ApplyLegacyRenames();
 
-            foreach (PackageEntry defaultEntry in BasePackageDefaults.Create())
+            syncedDefaults = fingerprint;
+
+            foreach (PackageEntry defaultEntry in defaults)
             {
                 int index = packages.FindIndex(entry => entry.Name == defaultEntry.Name);
 
@@ -76,14 +90,41 @@ namespace Base.PackageInstaller.Data
                 changed = true;
             }
 
-            if (changed)
+            if (changed
+                || isNewFingerprint)
                 Save(true);
 
             return changed;
         }
 
+        /// <summary>
+        /// Condenses a package list into a short value that changes whenever any name, URL or
+        /// dependency in it does, so the registry can tell whether the shipped defaults moved on.
+        /// </summary>
+        /// <param name="entries">The entries to condense, in their shipped order.</param>
+        /// <returns>The fingerprint of the list.</returns>
+        internal static string Fingerprint(IEnumerable<PackageEntry> entries)
+        {
+            IEnumerable<string> lines = entries.Select(static entry => string.Join(FieldSeparator,
+                entry.Name, entry.Url, string.Join(FieldSeparator, entry.DependsOn)));
+
+            return Hash128.Compute(string.Join(EntrySeparator, lines)).ToString();
+        }
+
         private static bool Matches(PackageEntry current, PackageEntry defaultEntry) => current.Url == defaultEntry.Url
             && current.DependsOn.SequenceEqual(defaultEntry.DependsOn);
+
+        // Only syncs when the shipped defaults changed since the last sync, not on every read. A default
+        // the project removed on purpose then stays removed until there is something new to bring in.
+        private void EnsureCurrent()
+        {
+            EnsureSeeded();
+
+            if (syncedDefaults == Fingerprint(BasePackageDefaults.Create()))
+                return;
+
+            SyncWithDefaults();
+        }
 
         private void EnsureSeeded()
         {
@@ -91,7 +132,12 @@ namespace Base.PackageInstaller.Data
                 return;
 
             if (packages.Count == 0)
-                packages.AddRange(BasePackageDefaults.Create());
+            {
+                PackageEntry[] defaults = BasePackageDefaults.Create();
+
+                packages.AddRange(defaults);
+                syncedDefaults = Fingerprint(defaults);
+            }
 
             seeded = true;
             Save(true);
