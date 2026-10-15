@@ -13,6 +13,7 @@ namespace Base.PackageInstaller.Data
         private const string ControllerSupport = "Controller Support";
         private const string Core = "Core";
         private const string CoreDebug = "Core Debug";
+        private const string DataHub = "Data Hub";
         private const string EditorUI = "Editor UI";
         private const string Localization = "Localization";
         private const string MemoryProfiler = "Memory Profiler";
@@ -39,6 +40,7 @@ namespace Base.PackageInstaller.Data
             new PackageEntry(ControllerSupport, $"{BaseUrl}ControllerSupport", Core),
             new PackageEntry(Core, $"{BaseUrl}Core", Tweening),
             new PackageEntry(CoreDebug, $"{BaseUrl}CoreDebug", Core),
+            new PackageEntry(DataHub, $"{BaseUrl}DataHub", Attributes, EditorUI, Tools, Utility),
             new PackageEntry(EditorUI, $"{BaseUrl}EditorUI"),
             new PackageEntry(Localization, $"{BaseUrl}Localization", EditorUI, Utility),
             new PackageEntry(MemoryProfiler, $"{BaseUrl}MemoryProfiler", Core),

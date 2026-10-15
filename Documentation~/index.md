@@ -26,7 +26,7 @@ Everything happens in one editor window. Tick what you need, click once, done.
 
 ## Included packages
 
-The list starts with the 16 Base packages and can be edited per project. Dependencies are ticked automatically.
+The list starts with the 17 Base packages and can be edited per project. Dependencies are ticked automatically.
 
 | Package | What it covers |
 | --- | --- |
