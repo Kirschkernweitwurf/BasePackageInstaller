@@ -20,6 +20,7 @@ namespace Base.PackageInstaller.Data
         private const string SaveSystem = "Save System";
         private const string Services = "Services";
         private const string Settings = "Settings";
+        private const string Text = "Text";
         private const string Tools = "Tools";
         private const string Tweening = "Tweening";
         private const string UI = "UI";
@@ -47,6 +48,7 @@ namespace Base.PackageInstaller.Data
             new PackageEntry(SaveSystem, $"{BaseUrl}SaveSystem", Services),
             new PackageEntry(Services, $"{BaseUrl}Services", Attributes),
             new PackageEntry(Settings, $"{BaseUrl}Settings", Tweening),
+            new PackageEntry(Text, $"{BaseUrl}Text", Attributes, EditorUI, Utility),
             new PackageEntry(Tools, $"{BaseUrl}Tools", Attributes),
             new PackageEntry(Tweening, $"{BaseUrl}Tweening", Services),
             new PackageEntry(UI, $"{BaseUrl}UI", Core),

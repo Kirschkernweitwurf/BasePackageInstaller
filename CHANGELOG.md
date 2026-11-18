@@ -6,6 +6,10 @@ actually shipped under, read back from `package.json` at each commit that change
 
 ## [Unreleased]
 
+### Added
+
+- Text in the default package list. It needs Attributes, Editor UI and Utility.
+
 ## [1.4.15] - 2026-10-15
 
 ### Added

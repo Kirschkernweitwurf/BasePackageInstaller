@@ -42,6 +42,7 @@ The list starts with the 17 Base packages and can be edited per project. Depende
 | Save System | Slot-based saving and loading |
 | Services | Service locator, bootstrapper, shutdown order |
 | Settings | Game settings with ready-made UI |
+| Text | Text styles per language, hyphenation, text size options, Text Fit check |
 | Tools | Editor tools: project health, generators, menu manager |
 | Tweening | Tween components and tween assets |
 | UI | Buttons, confirmation dialog, small UI helpers |
